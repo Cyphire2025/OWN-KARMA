@@ -171,6 +171,10 @@ function ProductsPage() {
             handleTransition('/divine')
         } else if (productName === "KARMA'S EYE") {
             handleTransition('/karma-eye')
+        } else if (productName === 'DESTINY') {
+            handleTransition('/destiny')
+        } else if (productName === 'BROKEN HOURGLASS') {
+            handleTransition('/broken-hourglass')
         } else {
             console.log(`Navigating to ${productName}`)
         }
