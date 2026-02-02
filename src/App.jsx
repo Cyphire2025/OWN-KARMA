@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import IntroPage from './pages/IntroPage.jsx'
-import Chapter1Page from './pages/Chapter1Page.jsx'
+
 import ProductsPage from './pages/ProductsPage.jsx'
 import DivinePage from './pages/DivinePage.jsx'
 
@@ -10,7 +10,6 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<IntroPage />} />
-                <Route path="/chapter1" element={<Chapter1Page />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/divine" element={<DivinePage />} />
             </Routes>

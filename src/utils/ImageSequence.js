@@ -1,5 +1,5 @@
 export class ImageSequence {
-    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1) {
+    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1, onProgress = null) {
         this.canvas = canvas
         this.ctx = this.canvas.getContext('2d', { alpha: false, desynchronized: true })
         this.ctx.imageSmoothingEnabled = true
@@ -13,6 +13,7 @@ export class ImageSequence {
         this.frame = { index: 0 }
         this.loadedCount = 0
         this.actualFrameCount = 0
+        this.onProgress = onProgress // Callback for loading progress
 
         // Advanced loading strategy
         this.loadingQueue = []
@@ -87,6 +88,12 @@ export class ImageSequence {
             this.images[frameIndex] = img
             this.loadedCount++
             this.loadingInProgress.delete(frameIndex)
+
+            // Report loading progress
+            if (this.onProgress) {
+                const progress = (this.loadedCount / this.actualFrameCount) * 100
+                this.onProgress(progress, this.loadedCount, this.actualFrameCount)
+            }
 
             // Render if this is the current or nearby frame
             const currentFrameIndex = Math.floor(this.frame.index)

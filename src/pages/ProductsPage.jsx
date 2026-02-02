@@ -81,7 +81,7 @@ function ProductsPage() {
 
             {/* Header - Top Fixed */}
             <header className="luxury-header-fixed">
-                <h1>OWN KARMA</h1>
+                <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>OWN KARMA</h1>
             </header>
 
             {/* Products Grid */}

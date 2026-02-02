@@ -42,7 +42,7 @@ function IntroPage() {
 
         // Initialize image sequence
         if (canvasRef.current) {
-            introSeqRef.current = new ImageSequence(canvasRef.current, 'intro', frameCounts.intro, 'frame_', 1)
+            introSeqRef.current = new ImageSequence(canvasRef.current, 'intro', frameCounts.intro, 'frame_', 1, null)
         }
 
         // Setup animations immediately

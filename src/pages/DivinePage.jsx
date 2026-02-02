@@ -32,7 +32,8 @@ function DivinePage() {
                 'divine',
                 frameCounts.divine,
                 'frame_',
-                1
+                1,
+                null
             )
         }
 
@@ -86,7 +87,7 @@ function DivinePage() {
 
                 {/* Header */}
                 <header className="divine-header">
-                    <h1>DIVINE</h1>
+                    <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>DIVINE</h1>
                     <p>Beyond Human Understanding</p>
                 </header>
 

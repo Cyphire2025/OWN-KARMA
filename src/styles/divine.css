@@ -56,6 +56,11 @@
     letter-spacing: 0.5em;
     margin: 0 0 0.3rem 0;
     color: #ffffff;
+    transition: opacity 0.3s ease;
+}
+
+.divine-header h1:hover {
+    opacity: 0.7;
 }
 
 .divine-header p {
