@@ -15,11 +15,11 @@ export class ImageSequence {
         this.actualFrameCount = 0
         this.onProgress = onProgress // Callback for loading progress
 
-        // Advanced loading strategy
+        // Advanced loading strategy - OPTIMIZED FOR PRODUCTION
         this.loadingQueue = []
         this.loadingInProgress = new Set()
-        this.maxConcurrentLoads = 6 // Chrome's connection limit per domain
-        this.preloadRadius = 15 // Preload frames around current position
+        this.maxConcurrentLoads = 12 // Increased from 6 for faster loading
+        this.preloadRadius = 50 // Massively increased from 15 - preload 50 frames ahead/behind
 
         // Resize handling
         this.resize()
@@ -135,6 +135,17 @@ export class ImageSequence {
     }
 
     render() {
+        // Skip if already rendering (prevent double renders)
+        if (this.isRendering) return
+        this.isRendering = true
+
+        requestAnimationFrame(() => {
+            this._renderFrame()
+            this.isRendering = false
+        })
+    }
+
+    _renderFrame() {
         let idx = Math.floor(this.frame.index)
         if (idx >= this.actualFrameCount) idx = this.actualFrameCount - 1
         if (idx < 0) idx = 0
@@ -150,7 +161,7 @@ export class ImageSequence {
             let nearestImg = null
             let minDistance = Infinity
 
-            for (let offset = 1; offset < 20; offset++) {
+            for (let offset = 1; offset < 30; offset++) { // Increased search radius
                 // Check frames before and after
                 const beforeIdx = idx - offset
                 const afterIdx = idx + offset
