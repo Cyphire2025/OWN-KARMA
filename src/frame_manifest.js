@@ -1,4 +1,5 @@
 export const frameCounts = {
   intro: 1823,
-  chap1: 192
+  divine: 300,
+  car1: 300
 }
