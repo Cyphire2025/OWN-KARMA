@@ -1,0 +1,432 @@
+/* Ultra Luxury Products Page - Starry Night Theme */
+
+.products-page-luxury {
+    min-height: 100vh;
+    height: 100vh;
+    background: #000000;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Animated Starry Background */
+.stars-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: radial-gradient(ellipse at bottom, #0a0a0a 0%, #000000 100%);
+}
+
+.star {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: twinkle 3s infinite ease-in-out;
+    box-shadow: 0 0 4px #ffffff;
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+/* Header - Top Fixed */
+.luxury-header-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    z-index: 100;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.luxury-header-fixed h1 {
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: 0.5em;
+    margin: 0;
+    background: linear-gradient(90deg, #ffffff 0%, #a0a0a0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeInDown 2s ease-out;
+}
+
+/* Footer - Bottom Fixed */
+.luxury-footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    z-index: 100;
+    text-align: center;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.luxury-footer-fixed p {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    opacity: 0.5;
+    margin: 0;
+    text-transform: uppercase;
+    animation: fadeIn 2s ease-out 0.6s backwards;
+}
+
+/* Products Container */
+.products-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1400px;
+    padding: 0 2rem;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    padding: 0;
+    animation: fadeInUp 1s ease-out 0.3s backwards;
+}
+
+/* Product Card */
+.product-card-luxury {
+    position: relative;
+    aspect-ratio: 3/4;
+    max-height: 42vh;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 0 20px rgba(60, 190, 255, 0.15),
+        0 0 40px rgba(74, 198, 255, 0.1),
+        0 0 60px rgba(64, 220, 255, 0.08);
+}
+
+.product-card-luxury:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow:
+        0 0 25px rgba(76, 191, 249, 0.15),
+        0 0 45px rgba(80, 200, 255, 0.1),
+        0 0 90px rgba(89, 197, 255, 0.08),
+        0 0 120px rgba(78, 196, 255, 0.1);
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(125, 211, 251, 0.05);
+}
+
+.product-card-luxury:hover .card-inner {
+    background: rgba(103, 204, 255, 0.04);
+    border-color: rgba(110, 202, 255, 0.15);
+    box-shadow: inset 0 0 50px rgba(90, 214, 245, 0.1);
+}
+
+/* Background Image */
+.card-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card-luxury:hover .card-background {
+    transform: scale(1.1);
+}
+
+/* Dark Overlay on Image */
+.card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.2) 0%,
+            rgba(0, 0, 0, 0.8) 100%);
+    z-index: 1;
+    transition: background 0.6s ease;
+}
+
+.product-card-luxury:hover .card-overlay {
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.1) 0%,
+            rgba(0, 0, 0, 0.7) 100%);
+}
+
+.product-card-luxury:hover .card-inner {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Soft Space Glow Effect */
+.card-space-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 50%,
+            rgba(85, 207, 255, 0.15) 0%,
+            rgba(83, 203, 255, 0.1) 25%,
+            rgba(80, 214, 255, 0.08) 50%,
+            transparent 10%);
+    opacity: 0;
+    z-index: 0;
+    animation: rotateGlow 20s linear infinite;
+    pointer-events: none;
+}
+
+.product-card-luxury:hover .card-space-glow {
+    opacity: 1;
+}
+
+@keyframes rotateGlow {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Glow Effect */
+.card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 0%,
+            var(--card-color, #646464) 0%,
+            transparent 60%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    border-radius: 16px;
+    z-index: 2;
+}
+
+.product-card-luxury:hover .card-glow {
+    opacity: 0.2;
+}
+
+/* Card Content */
+.card-content {
+    position: relative;
+    z-index: 3;
+}
+
+.card-name {
+    font-size: clamp(1.1rem, 1.4vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+    transition: all 0.6s ease;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.product-card-luxury:hover .card-name {
+    transform: translateY(-5px);
+    letter-spacing: 0.15em;
+}
+
+.card-tagline {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    opacity: 0.7;
+    margin: 0;
+    text-transform: uppercase;
+    font-weight: 300;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.6s ease;
+}
+
+.product-card-luxury:hover .card-tagline {
+    opacity: 0.9;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .product-card-luxury {
+        max-height: 50vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .products-page-luxury {
+        padding: 0;
+    }
+
+    .luxury-header-fixed {
+        padding: 1.5rem 1rem;
+    }
+
+    .luxury-header-fixed h1 {
+        font-size: 1.5rem;
+        letter-spacing: 0.3em;
+    }
+
+    .products-container {
+        padding: 0 1rem;
+    }
+
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .product-card-luxury {
+        max-height: 60vh;
+    }
+
+    .card-inner {
+        padding: 1.5rem 1rem;
+    }
+
+    .luxury-footer-fixed {
+        padding: 1.5rem 1rem;
+    }
+
+    .luxury-footer-fixed p {
+        font-size: 0.55rem;
+        letter-spacing: 0.2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-name {
+        font-size: 1rem;
+    }
+
+    .card-tagline {
+        font-size: 0.6rem;
+    }
+}
+
+/* Premium Touches */
+.product-card-luxury::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            transparent 100%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: 10;
+}
+
+.product-card-luxury:hover::before {
+    opacity: 1;
+}
+
+/* Shimmer Effect */
+.product-card-luxury::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.05) 45%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0.05) 55%,
+            transparent 100%);
+    transform: translateX(-100%) translateY(-100%);
+    transition: transform 0.8s ease;
+    pointer-events: none;
+}
+
+.product-card-luxury:hover::after {
+    transform: translateX(100%) translateY(100%);
+}
