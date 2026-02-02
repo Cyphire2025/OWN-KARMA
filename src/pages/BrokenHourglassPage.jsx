@@ -93,7 +93,7 @@ function BrokenHourglassPage() {
     }, [])
 
     const handleBack = () => {
-        navigate('/products')
+        navigate('/')
     }
 
     return (
@@ -110,7 +110,7 @@ function BrokenHourglassPage() {
 
             {/* Header Overlay */}
             <header className="divine-header">
-                <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>BROKEN HOURGLASS</h1>
+                <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>BROKEN HOURGLASS</h1>
                 <p>Time's Final Surrender</p>
             </header>
         </div>

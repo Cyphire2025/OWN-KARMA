@@ -68,7 +68,7 @@ function KarmaPage() {
     }
 
     const handleBack = () => {
-        navigate('/products')
+        navigate('/')
     }
 
     return (
@@ -86,7 +86,7 @@ function KarmaPage() {
 
                 {/* Header */}
                 <header className="karma-header">
-                    <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>KARMA'S EYE</h1>
+                    <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>KARMA'S EYE</h1>
                     <p>Witness To Every Action</p>
                 </header>
 

@@ -102,7 +102,7 @@ function DestinyPage() {
     }, [])
 
     const handleBack = () => {
-        navigate('/products')
+        navigate('/')
     }
 
     return (
@@ -119,7 +119,7 @@ function DestinyPage() {
 
             {/* Header Overlay */}
             <header className="divine-header">
-                <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>DESTINY</h1>
+                <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DESTINY</h1>
                 <p>Written In The Stars</p>
             </header>
 

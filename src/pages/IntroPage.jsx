@@ -15,11 +15,17 @@ function IntroPage() {
     const canvasRef = useRef(null)
     const headerRef = useRef(null)
     const seqRef = useRef(null)
+    const progressRef = useRef(null)
+
     const [stage, setStage] = useState(0)
 
     // UI State
     const [showButton, setShowButton] = useState(false)
     const [showScrollPrompt, setShowScrollPrompt] = useState(false)
+    const [menuOpen, setMenuOpen] = useState(false) // Hamburger Menu State
+
+    // Header Visibility (No state for transitions to avoid re-renders, purely DOM)
+    // const [showHeader, setShowHeader] = useState(true) // Removed to fix smoother transitions as requested. directionRef = useRef('next')
 
     const directionRef = useRef('next')
 
@@ -50,25 +56,16 @@ function IntroPage() {
         }
 
         // --- Speed Settings ---
-        if (stage === 0) {
-            state.current.velocity = 0.5
-            state.current.baseSpeed = 0.5
+        if (stage === 0 || stage === 2) {
+            state.current.velocity = 1.5
+            state.current.baseSpeed = 1.5
         } else {
-            state.current.velocity = 0.2
+            state.current.velocity = 0.5
             state.current.baseSpeed = 0.2
         }
 
-        // Fade Header IN
-        if (headerRef.current) {
-            gsap.fromTo(headerRef.current,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.8, delay: 0.5 }
-            )
-        }
-
-        if (seqRef.current) {
-            // 
-        }
+        // --- Header Fade In ---
+        // Removed showHeader logic to prevent crash
 
         seqRef.current = new ImageSequence(
             canvasRef.current,
@@ -93,33 +90,35 @@ function IntroPage() {
             s.velocity += (s.baseSpeed - s.velocity) * 0.05
             s.frame += s.velocity
 
+            // --- Logic ---
             if (config.loop) {
                 if (s.frame >= config.frames) s.frame = 0
                 if (s.frame < 0) s.frame = config.frames - 1
             } else {
-                // STRICT STOP AT END
                 if (s.frame >= config.frames - 1) {
                     s.frame = config.frames - 1
-                    s.velocity = 0 // HARD STOP
+                    s.velocity = 0
 
-                    // Stage 0 Trigger: Button
                     if (stage === 0 && !s.buttonTriggered) {
                         s.buttonTriggered = true
                         setShowButton(true)
                     }
-                    // Stage 1 Trigger: Scroll Prompt
                     if (stage === 1) setShowScrollPrompt(true)
                 }
-
-                // STRICT STOP AT START
                 if (s.frame <= 0) {
                     s.frame = 0
                     if (s.velocity < 0) s.velocity = 0 // Prevent negative drift
                 }
             }
 
+            // --- Render Frame ---
             seqRef.current.frame.index = Math.floor(s.frame)
             seqRef.current.render()
+
+            if (progressRef.current) {
+                const progress = Math.max(0, Math.min(1, s.frame / (config.frames - 1)))
+                progressRef.current.style.height = `${progress * 100}%`
+            }
 
             if (stage === 0) {
                 syncIntroText(s.frame)
@@ -133,16 +132,24 @@ function IntroPage() {
         gsap.ticker.add(tick)
 
         const handleWheel = (e) => {
-            const sensitivity = stage === 0 ? 0.05 : 0.02
+            // ----------------------------------------
+            // --- SCROLL SPEED CONFIGURATION SECTION ---
+            // ----------------------------------------
+            const MOON_SCROLL_SPEED = 1.0   // 1st & 3rd Video (Fast)
+            const CAR_SCROLL_SPEED = 0.015  // 2nd Video (Slow)
+
+            const MOON_MAX_VELOCITY = 20    // Max Speed Cap for Moon (High -> Fast traverse)
+            const CAR_MAX_VELOCITY = 4      // Max Speed Cap for Car
+            // ----------------------------------
+
+            const sensitivity = (stage === 0 || stage === 2) ? MOON_SCROLL_SPEED : CAR_SCROLL_SPEED
 
             // --- Stage 1 Transitions ---
             if (stage === 1) {
-                // NEXT: 1 -> 2 (Scroll Down at End)
                 if (showScrollPrompt && e.deltaY > 50) {
                     transitionToStage(2, 'next')
                     return
                 }
-                // PREV: 1 -> 0 (Scroll Up at Start)
                 if (state.current.frame < 50 && e.deltaY < -50) {
                     transitionToStage(0, 'prev')
                     return
@@ -151,8 +158,8 @@ function IntroPage() {
 
             // --- Stage 2 Transitions ---
             if (stage === 2) {
-                // PREV: 2 -> 1 (Scroll Up)
-                if (e.deltaY < -50) {
+                // ONLY Transition to 1 if we are at the START of the video
+                if (state.current.frame < 50 && e.deltaY < -50) {
                     transitionToStage(1, 'prev')
                     return
                 }
@@ -160,9 +167,10 @@ function IntroPage() {
 
             state.current.velocity += e.deltaY * sensitivity
 
-            // Limit max speed
-            if (state.current.velocity > 4) state.current.velocity = 4
-            if (state.current.velocity < -4) state.current.velocity = -4
+            const maxSpeed = (stage === 0 || stage === 2) ? MOON_MAX_VELOCITY : CAR_MAX_VELOCITY
+
+            if (state.current.velocity > maxSpeed) state.current.velocity = maxSpeed
+            if (state.current.velocity < -maxSpeed) state.current.velocity = -maxSpeed
         }
 
         window.addEventListener('wheel', handleWheel, { passive: false })
@@ -178,10 +186,10 @@ function IntroPage() {
         const tl = gsap.timeline()
         directionRef.current = direction
 
-        // Hide Header
-        if (headerRef.current) gsap.set(headerRef.current, { opacity: 0 })
+        // UNMOUNT HEADER INSTANTLY
+        // setShowHeader(false) // Removed to prevent crash
+        if (headerRef.current) gsap.set(headerRef.current, { opacity: 0, overwrite: true })
 
-        // Slide Directions
         const outY = direction === 'next' ? '-100vh' : '100vh'
         const inY = direction === 'next' ? '100vh' : '-100vh'
 
@@ -207,7 +215,6 @@ function IntroPage() {
             if (frame > 90 && frame < 540) t1.style.opacity = 1
             else t1.style.opacity = 0
         }
-
         const t2 = document.getElementById('text-2')
         if (t2) {
             if (frame > 820 && frame < 1360) t2.style.opacity = 1
@@ -271,7 +278,7 @@ function IntroPage() {
 
             <canvas ref={canvasRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
 
-            {/* Stage 0: Intro */}
+            {/* Stage 0 */}
             {stage === 0 && (
                 <>
                     <div id="text-1" className="intro-text-overlay" style={{ opacity: 0 }}>
@@ -280,7 +287,6 @@ function IntroPage() {
                     <div id="text-2" className="intro-text-overlay" style={{ opacity: 0 }}>
                         <h2 className="text-3xl tracking-[1em] font-light">BUILDING OWN KARMA</h2>
                     </div>
-
                     <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
                         <button
                             onClick={handleEnterExperience}
@@ -294,7 +300,7 @@ function IntroPage() {
                 </>
             )}
 
-            {/* Stage 1: Car - Scroll Prompt */}
+            {/* Stage 1 */}
             {stage === 1 && showScrollPrompt && (
                 <div style={{ ...wrapperStyle, opacity: 1, pointerEvents: 'none' }}>
                     <p className="text-sm tracking-[0.2em] font-bold uppercase mb-2 text-white">
@@ -308,7 +314,7 @@ function IntroPage() {
                 </div>
             )}
 
-            {/* Stage 2: Clean Loop - Centered Button */}
+            {/* Stage 2 */}
             {stage === 2 && (
                 <div style={{ ...wrapperStyle, opacity: 1, pointerEvents: 'auto' }}>
                     <button
@@ -317,25 +323,68 @@ function IntroPage() {
                         onMouseEnter={(e) => { e.target.style.background = 'white'; e.target.style.color = 'black' }}
                         onMouseLeave={(e) => { e.target.style.background = 'rgba(0, 0, 0, 0.3)'; e.target.style.color = 'white' }}
                     >
-                        Explore Chapter 1
+                        Explore Products
                     </button>
                 </div>
             )}
 
-            {/* Carousel Dots */}
-            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50">
-                {STAGES.map((s, idx) => (
-                    <div
-                        key={idx}
-                        className={`w-2 h-2 rounded-full transition-all duration-500`}
-                        style={{
-                            background: stage === idx ? 'white' : 'rgba(255,255,255,0.2)',
-                            transform: stage === idx ? 'scale(1.5)' : 'scale(1)'
-                        }}
-                    />
-                ))}
+            {/* Progress Dots - Fixed Inline Styles */}
+            <div style={{
+                position: 'absolute',
+                right: '2rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                zIndex: 9999
+            }}>
+                {STAGES.map((s, idx) => {
+                    const isActive = stage === idx;
+                    return (
+                        <div key={idx} style={{
+                            position: 'relative',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            transition: 'all 0.5s ease'
+                        }}>
+                            {isActive ? (
+                                <div style={{
+                                    width: '6px',
+                                    height: '48px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '999px',
+                                    overflow: 'hidden',
+                                    position: 'relative'
+                                }}>
+                                    <div
+                                        ref={progressRef}
+                                        style={{
+                                            width: '100%',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '999px',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            height: '0%'
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                                    borderRadius: '50%'
+                                }} />
+                            )}
+                        </div>
+                    )
+                })}
             </div>
 
+            {/* Header - Fixed to Center Properly */}
             <header
                 ref={headerRef}
                 className="absolute top-8 left-0 w-full z-50 pointer-events-none"
@@ -343,6 +392,141 @@ function IntroPage() {
             >
                 <h1 className="text-xl tracking-[0.5em] font-light text-white/80 inline-block">OWN KARMA</h1>
             </header>
+
+            {/* --- HAMBURGER MENU BUTTON --- */}
+            <div
+                onClick={() => setMenuOpen(!menuOpen)}
+                style={{
+                    position: 'absolute',
+                    top: '2.5rem',
+                    left: '2.5rem',
+                    zIndex: 99999,
+                    cursor: 'pointer',
+                    width: '32px',
+                    height: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                }}
+            >
+                <div style={{ width: '100%', height: '1.5px', background: 'white', transition: 'all 0.3s' }} />
+                <div style={{ width: '100%', height: '1.5px', background: 'white', transition: 'all 0.3s' }} />
+            </div>
+
+            {/* --- BACKDROP BLUR OVERLAY --- */}
+            <div
+                onClick={() => setMenuOpen(false)}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 99997,
+                    opacity: menuOpen ? 1 : 0,
+                    pointerEvents: menuOpen ? 'auto' : 'none',
+                    transition: 'opacity 0.6s ease'
+                }}
+            />
+
+            {/* --- SIDEBAR MENU DRAWER --- */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                maxWidth: '450px', // Sidebar Width
+                height: '100vh',
+                background: '#090909',
+                zIndex: 99998,
+                transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)', // Slide Effect
+                transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)', // Smooth Easing
+                boxShadow: '10px 0 30px rgba(0,0,0,0.5)',
+                borderRight: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                overflowY: 'auto'
+            }}>
+                <div style={{ width: '100%', padding: '2rem', paddingTop: '6rem' }}>
+                    <h2 style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: '0.8rem',
+                        letterSpacing: '0.15em',
+                        marginBottom: '2rem',
+                        fontFamily: 'sans-serif',
+                        marginLeft: '5px' // Align with cards
+                    }}>
+                        ALL TIMEPIECES
+                    </h2>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                        {[
+                            { name: 'DIVINE', img: '/backgrounds/1.png', link: '/divine' },
+                            { name: "KARMA'S EYE", img: '/backgrounds/2.png', link: '/karma-eye' },
+                            { name: 'DESTINY', img: '/backgrounds/3.png', link: '/destiny' },
+                            { name: 'BROKEN HOURGLASS', img: '/backgrounds/4.png', link: '/broken-hourglass' }
+                        ].map((item, idx) => (
+                            <div
+                                key={idx}
+                                onClick={() => {
+                                    setMenuOpen(false)
+                                    // Navigate Logic
+                                    navigate(item.link)
+                                }}
+                                style={{
+                                    height: '140px',
+                                    width: '100%',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            >
+                                {/* BG Image */}
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    backgroundImage: `url(${item.img})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    filter: 'brightness(0.6)',
+                                    transition: 'transform 0.5s'
+                                }} />
+
+                                {/* Content */}
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-end',
+                                    paddingRight: '3rem'
+                                }}>
+                                    <h3 style={{
+                                        color: 'white',
+                                        fontSize: '1.5rem',
+                                        letterSpacing: '0.05em',
+                                        fontWeight: '500',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px'
+                                    }}>
+                                        {item.name}
+                                        {/* Chevron Icon */}
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </h3>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
             <style>{`
                 .intro-text-overlay {

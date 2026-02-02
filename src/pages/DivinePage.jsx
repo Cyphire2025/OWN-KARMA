@@ -69,7 +69,7 @@ function DivinePage() {
     }
 
     const handleBack = () => {
-        navigate('/products')
+        navigate('/')
     }
 
     return (
@@ -87,7 +87,7 @@ function DivinePage() {
 
                 {/* Header */}
                 <header className="divine-header">
-                    <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>DIVINE</h1>
+                    <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DIVINE</h1>
                     <p>Beyond Human Understanding</p>
                 </header>
 
