@@ -4,6 +4,7 @@ import IntroPage from './pages/IntroPage.jsx'
 
 import ProductsPage from './pages/ProductsPage.jsx'
 import DivinePage from './pages/DivinePage.jsx'
+import KarmaPage from './pages/KarmaPage.jsx'
 
 function App() {
     return (
@@ -12,6 +13,7 @@ function App() {
                 <Route path="/" element={<IntroPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/divine" element={<DivinePage />} />
+                <Route path="/karma-eye" element={<KarmaPage />} />
             </Routes>
         </BrowserRouter>
     )

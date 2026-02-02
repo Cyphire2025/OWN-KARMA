@@ -1,0 +1,147 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ImageSequence } from '../utils/ImageSequence'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import '../styles/karma.css'
+
+gsap.registerPlugin(ScrollTrigger)
+
+const frameCounts = {
+    karma: 1413
+}
+
+function KarmaPage() {
+    const navigate = useNavigate()
+    const canvasRef = useRef(null)
+    const karmaSeqRef = useRef(null)
+    const containerRef = useRef(null)
+
+    useEffect(() => {
+        gsap.ticker.lagSmoothing(0)
+
+        // Initialize canvas size first
+        if (canvasRef.current) {
+            canvasRef.current.width = window.innerWidth
+            canvasRef.current.height = window.innerHeight
+
+            // Initialize image sequence
+            karmaSeqRef.current = new ImageSequence(
+                canvasRef.current,
+                'karma', // Folder name
+                frameCounts.karma,
+                'frame_',
+                1,
+                null
+            )
+        }
+
+        // Auto-play after images start loading
+        setTimeout(() => {
+            playOnce()
+        }, 100)
+
+        return () => {
+            gsap.killTweensOf(karmaSeqRef.current?.frame)
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+        }
+    }, [])
+
+    const playOnce = () => {
+        if (!karmaSeqRef.current) return
+
+        // Animate from frame 0 to last frame - INFINITE LOOP
+        gsap.to(karmaSeqRef.current.frame, {
+            index: frameCounts.karma - 1,
+            duration: 30, // Longer video, longer duration (approx 47s @ 30fps)
+            ease: 'none',
+            repeat: -1, // Loop infinitely
+            yoyo: false,
+            onUpdate: () => {
+                karmaSeqRef.current.render()
+            },
+            onRepeat: () => {
+                // Reset to frame 0 on each loop
+                karmaSeqRef.current.frame.index = 0
+            }
+        })
+    }
+
+    const handleBack = () => {
+        navigate('/products')
+    }
+
+    return (
+        <div className="karma-page-scroll" ref={containerRef}>
+            {/* Back Button */}
+            <button className="back-button" onClick={handleBack}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M12 4L6 10L12 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+            </button>
+
+            {/* Video Section */}
+            <section className="video-section">
+                <canvas ref={canvasRef} className="karma-canvas" />
+
+                {/* Header */}
+                <header className="karma-header">
+                    <h1 onClick={() => navigate('/products')} style={{ cursor: 'pointer' }}>KARMA'S EYE</h1>
+                    <p>Witness To Every Action</p>
+                </header>
+
+                {/* Cloud Transition Effect (optional, reused logic or styled via CSS) */}
+                <div className="cloud-transition"></div>
+            </section>
+
+            {/* Content Sections */}
+            <section className="content-section ideation-section">
+                <div className="content-container">
+                    <div className="content-text">
+                        <span className="section-label">VISION</span>
+                        <h2>The universe watches with a thousand eyes, seeing truth beyond the veil.</h2>
+                        <p>
+                            <strong>Karma's Eye</strong> reflects the eternal law of cause and effect.
+                            It is the silent observer, the keeper of balance, reminding us that
+                            every action ripples through the fabric of existence.
+                        </p>
+                    </div>
+                    <div className="content-image">
+                        <div className="image-placeholder">
+                            {/* Placeholder or specific image */}
+                            <img src="/backgrounds/2.png" alt="Karma's Eye Concept" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="content-section engineering-section">
+                <div className="content-container reverse">
+                    <div className="content-image">
+                        <div className="image-placeholder">
+                            {/* Placeholder or specific image */}
+                            <img src="/backgrounds/3.png" alt="Karma's Eye Detail" />
+                        </div>
+                    </div>
+                    <div className="content-text">
+                        <span className="section-label">REFLECTION</span>
+                        <h2>A mirror to the soul, unclouded by judgment.</h2>
+                        <p>
+                            Designed to embody clarity and consequence.
+                            <strong>Karma's Eye</strong> is not just a piece of art; it is a
+                            symbol of awareness, urging you to live with intention and purpose.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="cta-section">
+                <h2>Awaken Your Awareness</h2>
+                <p>See the world as it truly is. Embrace the cycle.</p>
+                <button className="cta-button">Explore Collection</button>
+            </section>
+        </div>
+    )
+}
+
+export default KarmaPage

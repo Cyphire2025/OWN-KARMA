@@ -78,17 +78,6 @@ function IntroPage() {
             onUpdate: () => introSeqRef.current.render()
         }, 0)
 
-        // Heading animations
-        tl.fromTo('#intro-heading',
-            { autoAlpha: 0, y: -20 },
-            { autoAlpha: 1, y: 0, duration: 0.1, ease: 'power2.out' },
-            0
-        )
-        tl.to('#intro-heading',
-            { autoAlpha: 0, y: -10, duration: 0.1, ease: 'power2.in' },
-            0.25
-        )
-
         // Text 1
         tl.fromTo('#intro-text-1',
             { autoAlpha: 0, y: 50, filter: 'blur(20px)', scale: 0.9 },
@@ -120,54 +109,49 @@ function IntroPage() {
     }
 
     const handleExploreProducts = () => {
-        console.log('Starting cinematic transition to Chapter 1...')
-
-        // Get the current canvas
-        const introCanvas = canvasRef.current
-        if (!introCanvas) return
-
-        // Create transition overlay with current frame snapshot
-        const transitionOverlay = document.createElement('div')
-        transitionOverlay.style.cssText = `
+        // Create fade overlay
+        const overlay = document.createElement('div')
+        overlay.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: 9999;
             background: #000;
+            z-index: 9999;
             opacity: 0;
-            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.6s ease;
+            pointer-events: none;
         `
-
-        // Snapshot current frame
-        const snapshot = document.createElement('canvas')
-        snapshot.width = window.innerWidth
-        snapshot.height = window.innerHeight
-        const ctx = snapshot.getContext('2d')
-        ctx.drawImage(introCanvas, 0, 0)
-        snapshot.style.cssText = 'width: 100%; height: 100%; object-fit: cover;'
-
-        transitionOverlay.appendChild(snapshot)
-        document.body.appendChild(transitionOverlay)
+        document.body.appendChild(overlay)
 
         // Fade to black
         requestAnimationFrame(() => {
-            transitionOverlay.style.opacity = '1'
+            overlay.style.opacity = '1'
         })
 
-        // Clean up GSAP
+        // Clean up GSAP and Lenis before leaving
         ScrollTrigger.getAll().forEach(trigger => trigger.kill())
         if (lenisRef.current) lenisRef.current.destroy()
 
-        // Navigate and fade out
+        // Navigate after fade
         setTimeout(() => {
             navigate('/products')
+
+            // Cleanup overlay after navigation (smooth cross-fade)
             setTimeout(() => {
-                transitionOverlay.style.opacity = '0'
-                setTimeout(() => document.body.removeChild(transitionOverlay), 1200)
+                if (document.body.contains(overlay)) {
+                    // Fade out overlay on new page
+                    overlay.style.transition = 'opacity 0.8s ease'
+                    overlay.style.opacity = '0'
+                    setTimeout(() => {
+                        if (document.body.contains(overlay)) {
+                            document.body.removeChild(overlay)
+                        }
+                    }, 800)
+                }
             }, 100)
-        }, 1200)
+        }, 600)
     }
 
     return (
