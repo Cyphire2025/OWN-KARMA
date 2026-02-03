@@ -1,3 +1,0 @@
-Login: admin@ownkarma.com
-Password: admin123
-supabase password - Ownkarma@123
