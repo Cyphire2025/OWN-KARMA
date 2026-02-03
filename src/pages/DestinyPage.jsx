@@ -31,7 +31,8 @@ function DestinyPage() {
             canvasRef.current.height = window.innerHeight
 
             // Initialize sequence with DIVINE frames
-            seqRef.current = new ImageSequence(
+            seqRef.current = ImageSequence.getSequence(
+                'car-300',
                 canvasRef.current,
                 'car', // Reusing folder
                 frameCounts.divine,
@@ -67,7 +68,7 @@ function DestinyPage() {
             // 4. Render
             // Update the sequence reference frame
             seqRef.current.frame.index = Math.floor(s.frame)
-            seqRef.current.render()
+            seqRef.current.render() // Optimized internally
         }
 
         gsap.ticker.add(tick)

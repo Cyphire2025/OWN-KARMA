@@ -26,8 +26,9 @@ function DivinePage() {
             canvasRef.current.width = window.innerWidth
             canvasRef.current.height = window.innerHeight
 
-            // Initialize image sequence
-            divineSeqRef.current = new ImageSequence(
+            // Initialize image sequence using Cache
+            divineSeqRef.current = ImageSequence.getSequence(
+                'car-300', // Unique Cache Key
                 canvasRef.current,
                 'car',
                 frameCounts.divine,
@@ -52,6 +53,11 @@ function DivinePage() {
     const playOnce = () => {
         if (!divineSeqRef.current) return
 
+        // Track last rendered frame locally to avoid closure issues if possible, 
+        // but here onUpdate is a closure. We can use a property on the ref or just let the optimized render() handle it.
+        // Since we upgraded ImageSequence.render() to check internally, ANY call to render() is now cheap if frame hasn't changed.
+        // So we can just call render() safely!
+
         // Animate from frame 0 to last frame - INFINITE LOOP
         gsap.to(divineSeqRef.current.frame, {
             index: frameCounts.divine - 1,
@@ -60,6 +66,7 @@ function DivinePage() {
             repeat: -1, // Loop infinitely
             yoyo: false,
             onUpdate: () => {
+                // The internal optimized render() will only draw when index changes
                 divineSeqRef.current.render()
             },
             onRepeat: () => {

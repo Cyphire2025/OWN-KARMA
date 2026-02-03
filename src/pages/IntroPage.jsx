@@ -24,6 +24,49 @@ function IntroPage() {
     const [showScrollPrompt, setShowScrollPrompt] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false) // Hamburger Menu State
 
+    // Audio State
+    const [isMuted, setIsMuted] = useState(false)
+    const audioRef = useRef(null)
+
+    useEffect(() => {
+        // Initialize Audio
+        const audio = new Audio('/audio/background.mp3')
+        audio.loop = true
+        audio.volume = 0.5
+        audioRef.current = audio
+
+        // Try to play immediately
+        const playPromise = audio.play()
+
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Autoplay prevented by browser. Muting.", error)
+                setIsMuted(true)
+                audio.muted = true
+                // We attempt to play again muted, or wait for interaction
+                audio.play()
+            })
+        }
+
+        return () => {
+            audio.pause()
+            audio.src = ''
+        }
+    }, [])
+
+    const toggleAudio = () => {
+        if (!audioRef.current) return
+
+        const newMutedState = !isMuted
+        setIsMuted(newMutedState)
+        audioRef.current.muted = newMutedState
+
+        // Ensure it's playing if we unmute (in case it paused)
+        if (!newMutedState) {
+            audioRef.current.play().catch(e => console.error("Play failed", e))
+        }
+    }
+
     // Header Visibility (No state for transitions to avoid re-renders, purely DOM)
     // const [showHeader, setShowHeader] = useState(true) // Removed to fix smoother transitions as requested. directionRef = useRef('next')
 
@@ -36,6 +79,9 @@ function IntroPage() {
         targetSpeed: 0.5,
         buttonTriggered: false
     })
+
+    // Track previous frame to avoid redundant DOM updates
+    const prevFrameRef = useRef(-1)
 
     // Initialize/Swap Sequence when Stage changes
     useEffect(() => {
@@ -57,17 +103,19 @@ function IntroPage() {
 
         // --- Speed Settings ---
         if (stage === 0 || stage === 2) {
-            state.current.velocity = 1.5
-            state.current.baseSpeed = 1.5
+            state.current.velocity = 0.75 // NOTICEABLY SLOWER (Half original speed)
+            state.current.baseSpeed = 0.75
         } else {
             state.current.velocity = 0.5
             state.current.baseSpeed = 0.2
         }
 
-        // --- Header Fade In ---
-        // Removed showHeader logic to prevent crash
+        // UNIQUE KEY for Cache: folder + frames
+        const seqKey = `${currentStageData.folder}-${currentStageData.frames}`
 
-        seqRef.current = new ImageSequence(
+        // USE CACHED FACTORY
+        seqRef.current = ImageSequence.getSequence(
+            seqKey,
             canvasRef.current,
             currentStageData.folder,
             currentStageData.frames,
@@ -76,6 +124,11 @@ function IntroPage() {
             null,
             '.avif'
         )
+
+        // Force initial render of the new sequence
+        seqRef.current.frame.index = Math.floor(state.current.frame)
+        seqRef.current.render(true)
+
     }, [stage])
 
     // Main Animation Loop
@@ -112,20 +165,28 @@ function IntroPage() {
                 }
             }
 
-            // --- Render Frame ---
-            seqRef.current.frame.index = Math.floor(s.frame)
-            seqRef.current.render()
+            const currentIdx = Math.floor(s.frame)
 
-            if (progressRef.current) {
-                const progress = Math.max(0, Math.min(1, s.frame / (config.frames - 1)))
-                progressRef.current.style.height = `${progress * 100}%`
-            }
+            // OPTIMIZATION: Check if frame index actually changed before updating DOM
+            if (currentIdx !== prevFrameRef.current) {
+                prevFrameRef.current = currentIdx
 
-            if (stage === 0) {
-                syncIntroText(s.frame)
-                if (s.frame > 500 && !s.buttonTriggered) {
-                    s.buttonTriggered = true
-                    setShowButton(true)
+                // --- Render Frame ---
+                seqRef.current.frame.index = currentIdx
+                seqRef.current.render() // .render() has internal optimization now
+
+                // --- DOM Updates only on frame change ---
+                if (progressRef.current) {
+                    const progress = Math.max(0, Math.min(1, s.frame / (config.frames - 1)))
+                    progressRef.current.style.height = `${progress * 100}%`
+                }
+
+                if (stage === 0) {
+                    syncIntroText(s.frame)
+                    if (s.frame > 500 && !s.buttonTriggered) {
+                        s.buttonTriggered = true
+                        setShowButton(true)
+                    }
                 }
             }
         }
@@ -393,6 +454,44 @@ function IntroPage() {
             >
                 <h1 className="text-xl tracking-[0.5em] font-light text-white/80 inline-block">OWN KARMA</h1>
             </header>
+
+            {/* --- AUDIO TOGGLE --- */}
+            <div
+                onClick={toggleAudio}
+                style={{
+                    position: 'absolute',
+                    top: '2.5rem',
+                    right: '2.5rem',
+                    zIndex: 99999,
+                    cursor: 'pointer',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    opacity: 0.8,
+                    transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
+            >
+                {isMuted ? (
+                    // Muted Icon
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                    </svg>
+                ) : (
+                    // Speaker Icon
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                )}
+            </div>
 
             {/* --- HAMBURGER MENU BUTTON --- */}
             <div

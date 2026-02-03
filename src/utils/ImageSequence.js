@@ -1,10 +1,20 @@
-export class ImageSequence {
-    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1, onProgress = null, extension = '.jpg') {
-        this.canvas = canvas
-        this.ctx = this.canvas.getContext('2d', { alpha: false, desynchronized: true })
-        this.ctx.imageSmoothingEnabled = true
-        this.ctx.imageSmoothingQuality = 'high'
+// Global cache for ImageSequence instances
+export const sequenceCache = {}
 
+export class ImageSequence {
+    static getSequence(key, canvas, folder, totalFrames, prefix, frameStep, onProgress, extension) {
+        if (sequenceCache[key]) {
+            const seq = sequenceCache[key]
+            seq.setCanvas(canvas) // Re-bind to new canvas element
+            return seq
+        }
+
+        const newSeq = new ImageSequence(canvas, folder, totalFrames, prefix, frameStep, onProgress, extension)
+        sequenceCache[key] = newSeq
+        return newSeq
+    }
+
+    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1, onProgress = null, extension = '.jpg') {
         this.folder = folder
         this.totalFrames = totalFrames
         this.prefix = prefix
@@ -14,44 +24,56 @@ export class ImageSequence {
         this.frame = { index: 0 }
         this.loadedCount = 0
         this.actualFrameCount = 0
-        this.onProgress = onProgress // Callback for loading progress
+        this.onProgress = onProgress
+        this.lastRenderedIndex = -1 // Track last render
 
-        // Advanced loading strategy - OPTIMIZED FOR PRODUCTION
+        // Loading State
         this.loadingQueue = []
         this.loadingInProgress = new Set()
-        this.maxConcurrentLoads = 12 // Increased from 6 for faster loading
-        this.preloadRadius = 50 // Massively increased from 15 - preload 50 frames ahead/behind
+        this.maxConcurrentLoads = 12
+        this.preloadRadius = 50
 
-        // Resize handling
-        this.resize()
-        window.addEventListener('resize', () => this.resize())
+        // Initialize Context
+        this.setCanvas(canvas)
 
-        // Start intelligent loading
+        // Start independent loading immediately
         this.initializeLoading()
     }
 
+    setCanvas(canvas) {
+        if (this.resizeHandler) {
+            window.removeEventListener('resize', this.resizeHandler)
+        }
+
+        this.canvas = canvas
+        this.ctx = this.canvas.getContext('2d', { alpha: false, desynchronized: true })
+        this.ctx.imageSmoothingEnabled = true
+        this.ctx.imageSmoothingQuality = 'high'
+
+        // Bind resize handler to instance so we can remove it
+        this.resizeHandler = () => this.resize()
+        window.addEventListener('resize', this.resizeHandler)
+
+        // Force resize and render on new canvas
+        this.resize()
+    }
+
     initializeLoading() {
+        if (this.images.length > 0) return // Already initialized
+
         // Create placeholder array
         for (let i = 0; i < this.totalFrames; i += this.frameStep) {
             this.images.push(null)
             this.actualFrameCount++
         }
 
-        // Priority loading strategy:
-        // 1. Load first frame immediately for instant display
-        // 2. Load every 10th frame for smooth scrubbing
-        // 3. Fill in remaining frames progressively
-
-        // Phase 1: Critical frames (first frame + key frames)
-        const criticalFrames = [0, 1, 2, 3, 4, 5] // First 6 frames for instant start
-
-        // Phase 2: Key frames (every 10th) for smooth initial scrubbing
+        // Priority loading logic
+        const criticalFrames = [0, 1, 2, 3, 4, 5]
         const keyFrames = []
         for (let i = 10; i < this.actualFrameCount; i += 10) {
             keyFrames.push(i)
         }
 
-        // Phase 3: All remaining frames
         const remainingFrames = []
         for (let i = 0; i < this.actualFrameCount; i++) {
             if (!criticalFrames.includes(i) && !keyFrames.includes(i)) {
@@ -59,15 +81,11 @@ export class ImageSequence {
             }
         }
 
-        // Queue frames in priority order
         this.loadingQueue = [...criticalFrames, ...keyFrames, ...remainingFrames]
-
-        // Start loading
         this.processLoadingQueue()
     }
 
     processLoadingQueue() {
-        // Load images in batches, respecting browser connection limits
         while (this.loadingInProgress.size < this.maxConcurrentLoads && this.loadingQueue.length > 0) {
             const frameIndex = this.loadingQueue.shift()
             this.loadImage(frameIndex)
@@ -75,12 +93,9 @@ export class ImageSequence {
     }
 
     loadImage(frameIndex) {
-        if (this.images[frameIndex] !== null || this.loadingInProgress.has(frameIndex)) {
-            return // Already loaded or loading
-        }
+        if (this.images[frameIndex] !== null || this.loadingInProgress.has(frameIndex)) return
 
         this.loadingInProgress.add(frameIndex)
-
         const img = new Image()
         const indexStr = (frameIndex * this.frameStep).toString().padStart(4, '0')
         const imgPath = `/images/${this.folder}/${this.prefix}${indexStr}${this.extension}`
@@ -90,19 +105,17 @@ export class ImageSequence {
             this.loadedCount++
             this.loadingInProgress.delete(frameIndex)
 
-            // Report loading progress
             if (this.onProgress) {
                 const progress = (this.loadedCount / this.actualFrameCount) * 100
                 this.onProgress(progress, this.loadedCount, this.actualFrameCount)
             }
 
-            // Render if this is the current or nearby frame
+            // If we just loaded the current frame or neighbor, force a re-render
             const currentFrameIndex = Math.floor(this.frame.index)
             if (Math.abs(frameIndex - currentFrameIndex) <= 2) {
-                this.render()
+                this.render(true) // Force render when new relevant asset arrives
             }
 
-            // Continue loading queue
             this.processLoadingQueue()
         }
 
@@ -114,82 +127,77 @@ export class ImageSequence {
         img.src = imgPath
     }
 
-    // Preload frames around current position for smooth playback
     preloadNearbyFrames(currentIndex) {
         const start = Math.max(0, currentIndex - this.preloadRadius)
         const end = Math.min(this.actualFrameCount - 1, currentIndex + this.preloadRadius)
 
         for (let i = start; i <= end; i++) {
             if (this.images[i] === null && !this.loadingInProgress.has(i)) {
-                // Add to front of queue for priority loading
                 this.loadingQueue.unshift(i)
             }
         }
-
         this.processLoadingQueue()
     }
 
     resize() {
+        if (!this.canvas) return
         this.canvas.width = window.innerWidth
         this.canvas.height = window.innerHeight
-        this.render()
+        this.render(true) // Force render on resize
     }
 
-    render() {
-        // Skip if already rendering (prevent double renders)
+    // Main API call from GSAP loop
+    // Now accepts force flag to bypass optimization
+    render(force = false) {
         if (this.isRendering) return
         this.isRendering = true
 
         requestAnimationFrame(() => {
-            this._renderFrame()
+            this._renderFrame(force)
             this.isRendering = false
         })
     }
 
-    _renderFrame() {
+    _renderFrame(force) {
         let idx = Math.floor(this.frame.index)
         if (idx >= this.actualFrameCount) idx = this.actualFrameCount - 1
         if (idx < 0) idx = 0
 
-        // Preload nearby frames for smooth scrubbing
+        // OPTIMIZATION: Only draw if frame changed or forced
+        if (!force && idx === this.lastRenderedIndex) {
+            return
+        }
+
+        this.lastRenderedIndex = idx
         this.preloadNearbyFrames(idx)
 
         const img = this.images[idx]
 
         // If target frame not loaded, find nearest loaded frame
         if (!img || !img.complete || img.naturalWidth === 0) {
-            // Search for nearest loaded frame
             let nearestImg = null
             let minDistance = Infinity
 
-            for (let offset = 1; offset < 30; offset++) { // Increased search radius
-                // Check frames before and after
+            for (let offset = 1; offset < 30; offset++) {
                 const beforeIdx = idx - offset
                 const afterIdx = idx + offset
 
                 if (beforeIdx >= 0 && this.images[beforeIdx]?.complete) {
-                    const distance = offset
-                    if (distance < minDistance) {
-                        minDistance = distance
+                    if (offset < minDistance) {
+                        minDistance = offset
                         nearestImg = this.images[beforeIdx]
                     }
                 }
-
                 if (afterIdx < this.actualFrameCount && this.images[afterIdx]?.complete) {
-                    const distance = offset
-                    if (distance < minDistance) {
-                        minDistance = distance
+                    if (offset < minDistance) {
+                        minDistance = offset
                         nearestImg = this.images[afterIdx]
                     }
                 }
-
                 if (nearestImg) break
             }
 
-            // Use nearest frame to avoid blank screen
-            if (nearestImg) {
-                this.drawImage(nearestImg)
-            }
+            if (nearestImg) this.drawImage(nearestImg)
             return
         }
 
@@ -199,7 +207,6 @@ export class ImageSequence {
     drawImage(img) {
         const cvsW = this.canvas.width
         const cvsH = this.canvas.height
-
         const imgRatio = img.width / img.height
         const canvasRatio = cvsW / cvsH
 

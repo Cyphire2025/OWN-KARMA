@@ -25,8 +25,9 @@ function KarmaPage() {
             canvasRef.current.width = window.innerWidth
             canvasRef.current.height = window.innerHeight
 
-            // Initialize image sequence
-            karmaSeqRef.current = new ImageSequence(
+            // Initialize image sequence using Cache
+            karmaSeqRef.current = ImageSequence.getSequence(
+                'karma-1413',
                 canvasRef.current,
                 'karma', // Folder name
                 frameCounts.karma,
