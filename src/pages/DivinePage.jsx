@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { medusa } from '../lib/medusa'
 import '../styles/divine.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    divine: 300
+    divine: 192
 }
 
 function DivinePage() {
@@ -17,6 +18,9 @@ function DivinePage() {
     const divineSeqRef = useRef(null)
     const containerRef = useRef(null)
     const [videoPlayed, setVideoPlayed] = useState(false)
+    const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         gsap.ticker.lagSmoothing(0)
@@ -28,9 +32,9 @@ function DivinePage() {
 
             // Initialize image sequence using Cache
             divineSeqRef.current = ImageSequence.getSequence(
-                'car-300', // Unique Cache Key
+                'divine-192', // Unique Cache Key
                 canvasRef.current,
-                'car',
+                'divine',
                 frameCounts.divine,
                 'frame_',
                 1,
@@ -44,19 +48,61 @@ function DivinePage() {
             playOnce()
         }, 100)
 
+        // Fetch products from Medusa
+        fetchProducts()
+
         return () => {
             gsap.killTweensOf(divineSeqRef.current?.frame)
             ScrollTrigger.getAll().forEach(trigger => trigger.kill())
         }
     }, [])
 
+    const fetchProducts = async () => {
+        try {
+            console.log('Fetching DIVINE collection...')
+
+            // First, get the DIVINE collection
+            const collectionsResponse = await medusa.collections.list()
+            console.log('All collections:', collectionsResponse.collections)
+
+            const divineCollection = collectionsResponse.collections.find(
+                col => col.title.toLowerCase().includes('divine')
+            )
+
+            if (!divineCollection) {
+                console.log('DIVINE collection not found')
+                setProducts([])
+                setLoading(false)
+                return
+            }
+
+            console.log('Found DIVINE collection:', divineCollection)
+
+            // Fetch products from DIVINE collection only
+            const response = await medusa.products.list({
+                collection_id: [divineCollection.id]
+            })
+
+            console.log('Products from DIVINE collection:', response)
+            console.log('Products array:', response.products)
+            console.log('Products count:', response.products?.length)
+
+            // Log each product
+            response.products?.forEach((product, index) => {
+                console.log(`Product ${index}:`, product)
+            })
+
+            setProducts(response.products || [])
+            setLoading(false)
+        } catch (error) {
+            console.error('Error fetching products:', error)
+            setError(error.message)
+            setLoading(false)
+        }
+    }
+
     const playOnce = () => {
         if (!divineSeqRef.current) return
-
-        // Track last rendered frame locally to avoid closure issues if possible, 
-        // but here onUpdate is a closure. We can use a property on the ref or just let the optimized render() handle it.
-        // Since we upgraded ImageSequence.render() to check internally, ANY call to render() is now cheap if frame hasn't changed.
-        // So we can just call render() safely!
 
         // Animate from frame 0 to last frame - INFINITE LOOP
         gsap.to(divineSeqRef.current.frame, {
@@ -66,11 +112,9 @@ function DivinePage() {
             repeat: -1, // Loop infinitely
             yoyo: false,
             onUpdate: () => {
-                // The internal optimized render() will only draw when index changes
                 divineSeqRef.current.render()
             },
             onRepeat: () => {
-                // Reset to frame 0 on each loop
                 divineSeqRef.current.frame.index = 0
             }
         })
@@ -78,6 +122,10 @@ function DivinePage() {
 
     const handleBack = () => {
         navigate('/')
+    }
+
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`)
     }
 
     return (
@@ -142,10 +190,72 @@ function DivinePage() {
                 </div>
             </section>
 
-            <section className="cta-section">
-                <h2>Begin Your Journey</h2>
-                <p>Experience the convergence of art, philosophy, and consciousness.</p>
-                <button className="cta-button">Explore More</button>
+            {/* Products Section - Connected to Backend */}
+            <section className="products-section">
+                <div className="products-container">
+                    <div className="products-header">
+                        <h2>Divine Collection</h2>
+                        <p>Curated pieces for conscious living</p>
+                    </div>
+
+                    {loading ? (
+                        <div className="products-loading">
+                            <p>Loading products...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="products-loading">
+                            <p style={{ color: '#ff6b6b' }}>Error: {error}</p>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '1rem' }}>
+                                Check browser console for details
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="products-grid">
+                            {products && products.length > 0 ? (
+                                products.map((product) => {
+                                    const image = product.thumbnail || product.images?.[0]?.url
+                                    const price = product.variants?.[0]?.prices?.[0]
+
+                                    return (
+                                        <div
+                                            key={product.id}
+                                            className="product-card"
+                                            onClick={() => handleProductClick(product.id)}
+                                        >
+                                            <div className="product-image">
+                                                {image ? (
+                                                    <img src={image} alt={product.title} />
+                                                ) : (
+                                                    <div className="product-image-placeholder">
+                                                        <span>No Image</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="product-info">
+
+                                                {product.subtitle && (
+                                                    <p className="product-subtitle">{product.subtitle}</p>
+                                                )}
+                                                {price && (
+                                                    <p className="product-price">
+                                                        {new Intl.NumberFormat('en-US', {
+                                                            style: 'currency',
+                                                            currency: price.currency_code.toUpperCase()
+                                                        }).format(price.amount / 100)}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <div className="products-loading">
+                                    <p>No products found</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </section>
         </div>
     )

@@ -35,6 +35,10 @@ function ProductsPage() {
     const starsRef = useRef(null)
 
     useLayoutEffect(() => {
+        // Cleanup transition overlays from IntroPage if they persist
+        const overlays = document.querySelectorAll('.transition-overlay')
+        overlays.forEach(el => el.remove())
+
         createStars()
 
         // Context for safe cleanup
@@ -184,11 +188,6 @@ function ProductsPage() {
         <div className="products-page-luxury">
             {/* Animated Starry Background */}
             <div className="stars-container" ref={starsRef}></div>
-
-            {/* Header - Top Fixed */}
-            <header className="luxury-header-fixed">
-                <h1 onClick={() => handleTransition('/')} style={{ cursor: 'pointer' }}>OWN KARMA</h1>
-            </header>
 
             {/* Products Grid */}
             <div className="products-container">

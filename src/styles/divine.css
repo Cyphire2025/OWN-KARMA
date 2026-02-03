@@ -376,4 +376,141 @@
     .cta-section {
         padding: 4rem 1.5rem;
     }
+
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Products Section */
+.products-section {
+    background: #000000;
+    padding: 8rem 4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.products-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.products-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.products-header h2 {
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+}
+
+.products-header p {
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.products-loading {
+    text-align: center;
+    padding: 4rem 0;
+    font-size: 1.2rem;
+    opacity: 0.6;
+    letter-spacing: 0.1em;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+.product-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 300px;
+    width: 300px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.product-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.product-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.product-card:hover .product-image img {
+    transform: scale(1.05);
+}
+
+.product-image-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.product-image-placeholder span {
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    opacity: 0.4;
+    text-transform: uppercase;
+}
+
+.product-info {
+    padding: 1.5rem;
+
+}
+
+.product-info h3 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem 0;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.product-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin: 0 0 1rem 0;
+    letter-spacing: 0.05em;
+}
+
+.product-price {
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    margin: 0;
+    color: #ffffff;
 }

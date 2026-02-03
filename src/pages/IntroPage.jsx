@@ -7,7 +7,9 @@ import '../styles/divine.css'
 const STAGES = [
     { id: 0, folder: 'intro', frames: 1823, loop: false },
     { id: 1, folder: 'car', frames: 300, loop: false },
-    { id: 2, folder: 'intro', frames: 1823, loop: false }
+    { id: 2, folder: 'intro', frames: 1823, loop: false },
+    { id: 3, folder: 'lambo', frames: 1056, loop: false },
+    { id: 4, folder: 'anime', frames: 4604, loop: false }
 ]
 
 function IntroPage() {
@@ -25,30 +27,28 @@ function IntroPage() {
     const [menuOpen, setMenuOpen] = useState(false) // Hamburger Menu State
 
     // Audio State
-    const [isMuted, setIsMuted] = useState(false)
+    const [isMuted, setIsMuted] = useState(true) // Start muted by default
     const audioRef = useRef(null)
 
     useEffect(() => {
-        // Initialize Audio
-        const audio = new Audio('/audio/background1.mp3')
+        // Initialize Audio and attach to DOM
+        const audio = document.createElement('audio')
+        audio.src = '/audio/background1.mp3'
         audio.loop = true
         audio.volume = 0.5
+        audio.preload = 'auto'
+        audio.style.display = 'none'
+        audio.muted = true // Force mute initially
+        document.body.appendChild(audio)
         audioRef.current = audio
 
-        // Try to play immediately
-        const playPromise = audio.play()
-
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("Autoplay prevented by browser. Muting.", error)
-                setIsMuted(true)
-                audio.muted = true
-                // We attempt to play again muted, or wait for interaction
-                audio.play()
-            })
-        }
+        // Play Muted immediately (usually allowed)
+        audio.play().catch(e => console.log("Audio play failed", e))
 
         return () => {
+            if (document.body.contains(audio)) {
+                document.body.removeChild(audio)
+            }
             audio.pause()
             audio.src = ''
         }
@@ -103,10 +103,15 @@ function IntroPage() {
 
         // --- Speed Settings ---
         if (stage === 0 || stage === 2) {
-            state.current.velocity = 0.75 // NOTICEABLY SLOWER (Half original speed)
+            state.current.velocity = 0.75
             state.current.baseSpeed = 0.75
+        } else if (stage === 4) {
+            // Anime needs to be much faster due to high frame count (4604)
+            state.current.velocity = 1
+            state.current.baseSpeed = 1
         } else {
-            state.current.velocity = 0.5
+            // Car (Stage 1) and Lambo (Stage 3)
+            state.current.velocity = 0.4
             state.current.baseSpeed = 0.2
         }
 
@@ -157,7 +162,17 @@ function IntroPage() {
                         s.buttonTriggered = true
                         setShowButton(true)
                     }
-                    if (stage === 1) setShowScrollPrompt(true)
+
+                    // Show "Scroll For More" on all middle stages (1, 2, 3)
+                    if (stage > 0 && stage < 4) {
+                        setShowScrollPrompt(true)
+                    }
+
+                    // Show "Explore Products" on last stage (4)
+                    if (stage === 4 && !s.buttonTriggered) {
+                        s.buttonTriggered = true
+                        setShowButton(true)
+                    }
                 }
                 if (s.frame <= 0) {
                     s.frame = 0
@@ -204,33 +219,48 @@ function IntroPage() {
             const CAR_MAX_VELOCITY = 4      // Max Speed Cap for Car
             // ----------------------------------
 
-            const sensitivity = (stage === 0 || stage === 2) ? MOON_SCROLL_SPEED : CAR_SCROLL_SPEED
+            // Sensitivity Logic
+            // Stage 0 (Moon 1), Stage 2 (Moon 2), Stage 3 (Lambo), Stage 4 (Anime) -> ALL use Moon settings now? 
+            // The user requested Lambo/Anime to be fast.
+            // Let's keep existing logic but ensure Stage 3 is covered. 
+            // In the previous step I made Stage 3 & 4 fast.
 
-            // --- Stage 1 Transitions ---
-            if (stage === 1) {
-                if (showScrollPrompt && e.deltaY > 50) {
-                    transitionToStage(2, 'next')
-                    return
-                }
-                if (state.current.frame < 50 && e.deltaY < -50) {
-                    transitionToStage(0, 'prev')
+            const isFastStage = (stage === 0 || stage === 2 || stage === 3 || stage === 4)
+            const sensitivity = isFastStage ? MOON_SCROLL_SPEED : CAR_SCROLL_SPEED
+
+            // --- Transitions ---
+
+            // Transition Prev/Next logic
+            // We can simplify this. If at bounds, transition.
+
+            const currentFrames = STAGES[stage].frames
+
+            // NEXT Transition
+            if (stage < STAGES.length - 1) {
+                // If at end of video and scrolling down
+                if (state.current.frame > currentFrames - 50 && e.deltaY > 50) {
+                    // For Stage 1/2/3, we show prompt, but if user scrolls hard, we go next.
+                    // Exception: Stage 0 requires button click? No, usually native scroll is allowed too.
+                    // But stage 0 has a button "Enter Experience".
+                    if (stage === 0) { /* Block scroll next on stage 0, button only? Or allow? Let's allow for now if at end */ }
+
+                    transitionToStage(stage + 1, 'next')
                     return
                 }
             }
 
-            // --- Stage 2 Transitions ---
-            if (stage === 2) {
-                // ONLY Transition to 1 if we are at the START of the video
+            // PREV Transition
+            if (stage > 0) {
+                // If at start of video and scrolling up
                 if (state.current.frame < 50 && e.deltaY < -50) {
-                    transitionToStage(1, 'prev')
+                    transitionToStage(stage - 1, 'prev')
                     return
                 }
             }
 
             state.current.velocity += e.deltaY * sensitivity
 
-            const maxSpeed = (stage === 0 || stage === 2) ? MOON_MAX_VELOCITY : CAR_MAX_VELOCITY
-
+            const maxSpeed = isFastStage ? MOON_MAX_VELOCITY : CAR_MAX_VELOCITY
             if (state.current.velocity > maxSpeed) state.current.velocity = maxSpeed
             if (state.current.velocity < -maxSpeed) state.current.velocity = -maxSpeed
         }
@@ -247,6 +277,10 @@ function IntroPage() {
         const canvas = canvasRef.current
         const tl = gsap.timeline()
         directionRef.current = direction
+
+        // Hide UI during transition
+        setShowScrollPrompt(false)
+        setShowButton(false)
 
         // UNMOUNT HEADER INSTANTLY
         // setShowHeader(false) // Removed to prevent crash
@@ -271,6 +305,12 @@ function IntroPage() {
             })
     }
 
+    const handleDotClick = (targetIndex) => {
+        if (targetIndex === stage) return
+        const direction = targetIndex > stage ? 'next' : 'prev'
+        transitionToStage(targetIndex, direction)
+    }
+
     const syncIntroText = (frame) => {
         const t1 = document.getElementById('text-1')
         if (t1) {
@@ -290,6 +330,7 @@ function IntroPage() {
 
     const handleExploreProducts = () => {
         const overlay = document.createElement('div')
+        overlay.className = 'transition-overlay'
         overlay.style.cssText = `
              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
              background: #000; z-index: 9999; opacity: 0; transition: opacity 0.6s ease; pointer-events: none;
@@ -298,55 +339,58 @@ function IntroPage() {
         requestAnimationFrame(() => overlay.style.opacity = '1')
         setTimeout(() => {
             navigate('/products')
+            // Cleanup: fade out and remove
             setTimeout(() => {
-                if (document.body.contains(overlay)) {
-                    overlay.style.transition = 'opacity 0.8s ease'
-                    overlay.style.opacity = '0'
-                    setTimeout(() => {
-                        if (document.body.contains(overlay)) document.body.removeChild(overlay)
-                    }, 800)
-                }
+                overlay.style.opacity = '0'
+                setTimeout(() => {
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
+                }, 600)
             }, 100)
         }, 600)
     }
 
     // Styles
-    const buttonStyle = {
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '9999px',
-        padding: '1.2rem 3rem',
-        fontSize: '0.7rem',
-        letterSpacing: '0.25em',
-        background: 'rgba(0, 0, 0, 0.3)',
-        color: 'white',
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-        backdropFilter: 'blur(4px)',
-        transition: 'all 0.3s ease'
-    }
-
     const wrapperStyle = {
         position: 'absolute',
-        bottom: '10vh',
+        bottom: '10%',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 100,
-        transition: 'opacity 1s ease-out',
-        textAlign: 'center'
+        zIndex: 50,
+        textAlign: 'center',
+        opacity: 0,
+        transition: 'opacity 1s ease',
+        pointerEvents: 'none'
+    }
+
+    const buttonStyle = {
+        background: 'rgba(0, 0, 0, 0.3)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        color: 'white',
+        padding: '1rem 2rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.2em',
+        cursor: 'pointer',
+        backdropFilter: 'blur(5px)',
+        transition: 'all 0.3s ease',
+        fontSize: '0.8rem',
+        borderRadius: '9999px'
     }
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#000', overflow: 'hidden' }}>
+        <div style={{ width: '100vw', height: '100vh', background: 'black', overflow: 'hidden', position: 'relative' }}>
+            {/* Canvas Layer */}
+            <canvas
+                ref={canvasRef}
+                style={{ width: '100%', height: '100%', display: 'block' }}
+            />
 
-            <canvas ref={canvasRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-
-            {/* Stage 0 */}
+            {/* Overlays */}
             {stage === 0 && (
                 <>
-                    <div id="text-1" className="intro-text-overlay" style={{ opacity: 0 }}>
-                        <h2 className="text-3xl tracking-[1em] font-light">LIVING CONSCIOUSLY</h2>
+                    <div id="text-1" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
+                        <h2 className="text-3xl tracking-[0.5em] font-light mb-4">LIVING CONSCIOUSLY</h2>
                     </div>
-                    <div id="text-2" className="intro-text-overlay" style={{ opacity: 0 }}>
+                    <div id="text-2" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
                         <h2 className="text-3xl tracking-[1em] font-light">BUILDING OWN KARMA</h2>
                     </div>
                     <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
@@ -362,8 +406,8 @@ function IntroPage() {
                 </>
             )}
 
-            {/* Stage 1 */}
-            {stage === 1 && showScrollPrompt && (
+            {/* Stages 1, 2, 3 - Scroll Prompt */}
+            {(stage === 1 || stage === 2 || stage === 3) && showScrollPrompt && (
                 <div style={{ ...wrapperStyle, opacity: 1, pointerEvents: 'none' }}>
                     <p className="text-sm tracking-[0.2em] font-bold uppercase mb-2 text-white">
                         Scroll For More
@@ -376,9 +420,9 @@ function IntroPage() {
                 </div>
             )}
 
-            {/* Stage 2 */}
-            {stage === 2 && (
-                <div style={{ ...wrapperStyle, opacity: 1, pointerEvents: 'auto' }}>
+            {/* Stage 4 - Explore Button */}
+            {stage === 4 && (
+                <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
                     <button
                         onClick={handleExploreProducts}
                         style={buttonStyle}
@@ -390,7 +434,7 @@ function IntroPage() {
                 </div>
             )}
 
-            {/* Progress Dots - Fixed Inline Styles */}
+            {/* Progress Dots - Interactive */}
             <div style={{
                 position: 'absolute',
                 right: '2rem',
@@ -404,13 +448,19 @@ function IntroPage() {
                 {STAGES.map((s, idx) => {
                     const isActive = stage === idx;
                     return (
-                        <div key={idx} style={{
-                            position: 'relative',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            transition: 'all 0.5s ease'
-                        }}>
+                        <div
+                            key={idx}
+                            onClick={() => handleDotClick(idx)}
+                            style={{
+                                position: 'relative',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                transition: 'all 0.5s ease',
+                                cursor: 'pointer', // Make it look clickable
+                                padding: '4px' // Hit area
+                            }}
+                        >
                             {isActive ? (
                                 <div style={{
                                     width: '6px',
@@ -418,7 +468,8 @@ function IntroPage() {
                                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                                     borderRadius: '999px',
                                     overflow: 'hidden',
-                                    position: 'relative'
+                                    position: 'relative',
+                                    pointerEvents: 'none'
                                 }}>
                                     <div
                                         ref={progressRef}
@@ -438,8 +489,12 @@ function IntroPage() {
                                     width: '6px',
                                     height: '6px',
                                     backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                                    borderRadius: '50%'
-                                }} />
+                                    borderRadius: '50%',
+                                    transition: 'background-color 0.3s'
+                                }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = 'white'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.4)'}
+                                />
                             )}
                         </div>
                     )
