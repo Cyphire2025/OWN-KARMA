@@ -42,7 +42,7 @@
 /* Header */
 .divine-header {
     position: absolute;
-    top: 2rem;
+    top: 6rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 200;

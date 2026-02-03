@@ -30,7 +30,7 @@ function IntroPage() {
 
     useEffect(() => {
         // Initialize Audio
-        const audio = new Audio('/audio/background.mp3')
+        const audio = new Audio('/audio/background1.mp3')
         audio.loop = true
         audio.volume = 0.5
         audioRef.current = audio
@@ -446,14 +446,7 @@ function IntroPage() {
                 })}
             </div>
 
-            {/* Header - Fixed to Center Properly */}
-            <header
-                ref={headerRef}
-                className="absolute top-8 left-0 w-full z-50 pointer-events-none"
-                style={{ textAlign: 'center', opacity: 1 }}
-            >
-                <h1 className="text-xl tracking-[0.5em] font-light text-white/80 inline-block">OWN KARMA</h1>
-            </header>
+
 
             {/* --- AUDIO TOGGLE --- */}
             <div
