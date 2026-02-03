@@ -6,7 +6,7 @@ import '../styles/divine.css'
 
 const STAGES = [
     { id: 0, folder: 'intro', frames: 1823, loop: false },
-    { id: 1, folder: 'car1', frames: 300, loop: false },
+    { id: 1, folder: 'car', frames: 300, loop: false },
     { id: 2, folder: 'intro', frames: 1823, loop: false }
 ]
 
@@ -73,7 +73,8 @@ function IntroPage() {
             currentStageData.frames,
             'frame_',
             1,
-            null
+            null,
+            '.avif'
         )
     }, [stage])
 

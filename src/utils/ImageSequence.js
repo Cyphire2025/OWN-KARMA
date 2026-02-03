@@ -1,5 +1,5 @@
 export class ImageSequence {
-    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1, onProgress = null) {
+    constructor(canvas, folder, totalFrames, prefix = 'frame_', frameStep = 1, onProgress = null, extension = '.jpg') {
         this.canvas = canvas
         this.ctx = this.canvas.getContext('2d', { alpha: false, desynchronized: true })
         this.ctx.imageSmoothingEnabled = true
@@ -8,6 +8,7 @@ export class ImageSequence {
         this.folder = folder
         this.totalFrames = totalFrames
         this.prefix = prefix
+        this.extension = extension
         this.frameStep = frameStep
         this.images = []
         this.frame = { index: 0 }
@@ -82,7 +83,7 @@ export class ImageSequence {
 
         const img = new Image()
         const indexStr = (frameIndex * this.frameStep).toString().padStart(4, '0')
-        const imgPath = `/images/${this.folder}/${this.prefix}${indexStr}.jpg`
+        const imgPath = `/images/${this.folder}/${this.prefix}${indexStr}${this.extension}`
 
         img.onload = () => {
             this.images[frameIndex] = img

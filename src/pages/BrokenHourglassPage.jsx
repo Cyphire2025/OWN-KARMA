@@ -33,11 +33,12 @@ function BrokenHourglassPage() {
             // Initialize sequence with DIVINE frames (placeholder as requested)
             seqRef.current = new ImageSequence(
                 canvasRef.current,
-                'divine',
+                'car',
                 frameCounts.divine,
                 'frame_',
                 1,
-                null
+                null,
+                '.avif'
             )
         }
 

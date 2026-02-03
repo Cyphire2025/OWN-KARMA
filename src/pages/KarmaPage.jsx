@@ -32,7 +32,8 @@ function KarmaPage() {
                 frameCounts.karma,
                 'frame_',
                 1,
-                null
+                null,
+                '.avif'
             )
         }
 

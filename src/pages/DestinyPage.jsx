@@ -33,11 +33,12 @@ function DestinyPage() {
             // Initialize sequence with DIVINE frames
             seqRef.current = new ImageSequence(
                 canvasRef.current,
-                'divine', // Reusing folder
+                'car', // Reusing folder
                 frameCounts.divine,
                 'frame_',
                 1,
-                null
+                null,
+                '.avif'
             )
         }
 

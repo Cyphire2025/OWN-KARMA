@@ -29,11 +29,12 @@ function DivinePage() {
             // Initialize image sequence
             divineSeqRef.current = new ImageSequence(
                 canvasRef.current,
-                'divine',
+                'car',
                 frameCounts.divine,
                 'frame_',
                 1,
-                null
+                null,
+                '.avif'
             )
         }
 
