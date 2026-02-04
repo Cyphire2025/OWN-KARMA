@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  medusa-backend:
+    build: .
+    container_name: medusa-backend
+    restart: always
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/medusa-store
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=something_super_secret_for_jwt
+      - COOKIE_SECRET=something_super_secret_for_cookie
+      - STORE_CORS=http://localhost:3000
+      - ADMIN_CORS=http://localhost:9000
+
+  db:
+    image: postgres:15-alpine
+    container_name: medusa-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=medusa-store
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: medusa-redis
+    restart: always
+
+volumes:
+  postgres_data:
