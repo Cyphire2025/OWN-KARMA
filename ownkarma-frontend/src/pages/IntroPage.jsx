@@ -238,11 +238,10 @@ function IntroPage() {
             // NEXT Transition
             if (stage < STAGES.length - 1) {
                 // If at end of video and scrolling down
+                // If at end of video and scrolling down
                 if (state.current.frame > currentFrames - 50 && e.deltaY > 50) {
-                    // For Stage 1/2/3, we show prompt, but if user scrolls hard, we go next.
-                    // Exception: Stage 0 requires button click? No, usually native scroll is allowed too.
-                    // But stage 0 has a button "Enter Experience".
-                    if (stage === 0) { /* Block scroll next on stage 0, button only? Or allow? Let's allow for now if at end */ }
+                    // Stage 0: Lock scroll. User MUST click "Enter Experience".
+                    if (stage === 0) return
 
                     transitionToStage(stage + 1, 'next')
                     return

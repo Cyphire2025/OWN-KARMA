@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Backend (separate repo)
-medusa-backend
+# medusa-backend (Uncommented for deployment)
