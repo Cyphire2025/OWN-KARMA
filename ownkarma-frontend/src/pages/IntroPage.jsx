@@ -5,11 +5,11 @@ import gsap from 'gsap'
 import '../styles/divine.css'
 
 const STAGES = [
-    { id: 0, folder: 'intro', frames: 1823, loop: false },
-    { id: 1, folder: 'car', frames: 300, loop: false },
-    { id: 2, folder: 'intro', frames: 1823, loop: false },
-    { id: 3, folder: 'lambo', frames: 1056, loop: false },
-    { id: 4, folder: 'anime', frames: 4604, loop: false }
+    { id: 0, folder: 'intro', frames: 1823, loop: false, audio: '/audio/stage0.mp3' },
+    { id: 1, folder: 'car', frames: 300, loop: false, audio: '/audio/stage1.mp3' },
+    { id: 2, folder: 'intro', frames: 1823, loop: false, audio: '/audio/stage2.mp3' },
+    { id: 3, folder: 'lambo', frames: 1056, loop: false, audio: '/audio/stage3.mp3' },
+    { id: 4, folder: 'anime', frames: 4604, loop: false, audio: '/audio/stage4.mp3' }
 ]
 
 function IntroPage() {
@@ -23,7 +23,7 @@ function IntroPage() {
 
     // UI State
     const [showButton, setShowButton] = useState(false)
-    const [showScrollPrompt, setShowScrollPrompt] = useState(false)
+    // const [showScrollPrompt, setShowScrollPrompt] = useState(false) // Removed
     const [menuOpen, setMenuOpen] = useState(false) // Hamburger Menu State
 
     // Audio State
@@ -33,7 +33,7 @@ function IntroPage() {
     useEffect(() => {
         // Initialize Audio and attach to DOM
         const audio = document.createElement('audio')
-        audio.src = '/audio/background1.mp3'
+        audio.src = STAGES[0].audio
         audio.loop = true
         audio.volume = 0.5
         audio.preload = 'auto'
@@ -93,12 +93,18 @@ function IntroPage() {
         // --- Init Frame based on Direction ---
         if (directionRef.current === 'prev') {
             state.current.frame = currentStageData.frames - 1
-            if (stage === 0) setShowButton(true)
-            if (stage === 1) setShowScrollPrompt(true)
+            // Show button when reversing into a stage
+            setShowButton(true)
         } else {
             state.current.frame = 0
             setShowButton(false)
-            setShowScrollPrompt(false)
+        }
+
+        // --- Switch Audio Track ---
+        if (audioRef.current) {
+            audioRef.current.src = currentStageData.audio
+            // Ensure playback resumes (even if muted)
+            audioRef.current.play().catch(e => console.log("Audio switch play failed", e))
         }
 
         // --- Speed Settings ---
@@ -158,25 +164,18 @@ function IntroPage() {
                     s.frame = config.frames - 1
                     s.velocity = 0
 
-                    if (stage === 0 && !s.buttonTriggered) {
-                        s.buttonTriggered = true
-                        setShowButton(true)
-                    }
-
-                    // Show "Scroll For More" on all middle stages (1, 2, 3)
-                    if (stage > 0 && stage < 4) {
-                        setShowScrollPrompt(true)
-                    }
-
-                    // Show "Explore Products" on last stage (4)
-                    if (stage === 4 && !s.buttonTriggered) {
-                        s.buttonTriggered = true
-                        setShowButton(true)
-                    }
+                    // Button trigger moved to generic logic below
                 }
                 if (s.frame <= 0) {
                     s.frame = 0
                     if (s.velocity < 0) s.velocity = 0 // Prevent negative drift
+                }
+
+                // Trigger Button 400 frames before end
+                const triggerFrame = Math.max(0, config.frames - 400)
+                if (s.frame >= triggerFrame && !s.buttonTriggered) {
+                    s.buttonTriggered = true
+                    setShowButton(true)
                 }
             }
 
@@ -198,10 +197,6 @@ function IntroPage() {
 
                 if (stage === 0) {
                     syncIntroText(s.frame)
-                    if (s.frame > 500 && !s.buttonTriggered) {
-                        s.buttonTriggered = true
-                        setShowButton(true)
-                    }
                 }
             }
         }
@@ -270,7 +265,7 @@ function IntroPage() {
             gsap.ticker.remove(tick)
             window.removeEventListener('wheel', handleWheel)
         }
-    }, [stage, showScrollPrompt])
+    }, [stage])
 
     const transitionToStage = (nextStage, direction = 'next') => {
         const canvas = canvasRef.current
@@ -278,7 +273,6 @@ function IntroPage() {
         directionRef.current = direction
 
         // Hide UI during transition
-        setShowScrollPrompt(false)
         setShowButton(false)
 
         // UNMOUNT HEADER INSTANTLY
@@ -384,54 +378,40 @@ function IntroPage() {
             />
 
             {/* Overlays */}
-            {stage === 0 && (
-                <>
-                    <div id="text-1" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
-                        <h2 className="text-3xl tracking-[0.5em] font-light mb-4">LIVING CONSCIOUSLY</h2>
-                    </div>
-                    <div id="text-2" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
-                        <h2 className="text-3xl tracking-[1em] font-light">BUILDING OWN KARMA</h2>
-                    </div>
-                    <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
-                        <button
-                            onClick={handleEnterExperience}
-                            style={buttonStyle}
-                            onMouseEnter={(e) => { e.target.style.background = 'white'; e.target.style.color = 'black' }}
-                            onMouseLeave={(e) => { e.target.style.background = 'rgba(0, 0, 0, 0.3)'; e.target.style.color = 'white' }}
-                        >
-                            Enter Experience
-                        </button>
-                    </div>
-                </>
-            )}
+            <>
+                {stage === 0 && (
+                    <>
+                        <div id="text-1" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
+                            <h2 className="text-3xl tracking-[0.5em] font-light mb-4">LIVING CONSCIOUSLY</h2>
+                        </div>
+                        <div id="text-2" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
+                            <h2 className="text-3xl tracking-[1em] font-light">BUILDING OWN KARMA</h2>
+                        </div>
+                    </>
+                )}
 
-            {/* Stages 1, 2, 3 - Scroll Prompt */}
-            {(stage === 1 || stage === 2 || stage === 3) && showScrollPrompt && (
-                <div style={{ ...wrapperStyle, opacity: 1, pointerEvents: 'none' }}>
-                    <p className="text-sm tracking-[0.2em] font-bold uppercase mb-2 text-white">
-                        Scroll For More
-                    </p>
-                    <div className="animate-bounce">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto', display: 'block' }}>
-                            <path d="M7 10L12 15L17 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                </div>
-            )}
-
-            {/* Stage 4 - Explore Button */}
-            {stage === 4 && (
+                {/* Unified Button Logic for All Stages */}
                 <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
                     <button
-                        onClick={handleExploreProducts}
+                        onClick={() => {
+                            if (stage === 4) {
+                                handleExploreProducts()
+                            } else {
+                                transitionToStage(stage + 1)
+                            }
+                        }}
                         style={buttonStyle}
                         onMouseEnter={(e) => { e.target.style.background = 'white'; e.target.style.color = 'black' }}
                         onMouseLeave={(e) => { e.target.style.background = 'rgba(0, 0, 0, 0.3)'; e.target.style.color = 'white' }}
                     >
-                        Explore Products
+                        {stage === 0 && "Explore Chapter 1"}
+                        {stage === 1 && "Explore Chapter 2"}
+                        {stage === 2 && "Explore Chapter 3"}
+                        {stage === 3 && "Explore Chapter 4"}
+                        {stage === 4 && "Explore All Chapters"}
                     </button>
                 </div>
-            )}
+            </>
 
             {/* Progress Dots - Interactive */}
             <div style={{
