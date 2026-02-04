@@ -8,7 +8,7 @@ import '../styles/karma.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    karma: 1413
+    karma: 399
 }
 
 function KarmaPage() {
@@ -27,9 +27,9 @@ function KarmaPage() {
 
             // Initialize image sequence using Cache
             karmaSeqRef.current = ImageSequence.getSequence(
-                'karma-1413',
+                'karmaeye-399',
                 canvasRef.current,
-                'karma', // Folder name
+                'karmaeye', // Folder name
                 frameCounts.karma,
                 'frame_',
                 1,
@@ -55,7 +55,7 @@ function KarmaPage() {
         // Animate from frame 0 to last frame - INFINITE LOOP
         gsap.to(karmaSeqRef.current.frame, {
             index: frameCounts.karma - 1,
-            duration: 30, // Longer video, longer duration (approx 47s @ 30fps)
+            duration: 13, // Longer video, longer duration (approx 47s @ 30fps)
             ease: 'none',
             repeat: -1, // Loop infinitely
             yoyo: false,

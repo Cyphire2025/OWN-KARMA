@@ -2,25 +2,20 @@ import React, { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
-import '../styles/divine.css' // Reusing divine styles for full screen canvas
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import '../styles/divine.css'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    divine: 300 // Reusing Divine frames
+    destiny: 302
 }
 
 function DestinyPage() {
     const navigate = useNavigate()
     const canvasRef = useRef(null)
     const seqRef = useRef(null)
-
-    // Physics State
-    const state = useRef({
-        frame: 0,
-        velocity: 0.2, // Base auto-play speed (positive = forward)
-        baseSpeed: 0.2,
-        isScrolling: false,
-        scrollToVelocityTimeout: null
-    })
+    const containerRef = useRef(null)
 
     useEffect(() => {
         gsap.ticker.lagSmoothing(0)
@@ -30,12 +25,12 @@ function DestinyPage() {
             canvasRef.current.width = window.innerWidth
             canvasRef.current.height = window.innerHeight
 
-            // Initialize sequence with DIVINE frames
+            // Initialize sequence
             seqRef.current = ImageSequence.getSequence(
-                'car-300',
+                'destiny-302',
                 canvasRef.current,
-                'car', // Reusing folder
-                frameCounts.divine,
+                'destiny', // Folder
+                frameCounts.destiny,
                 'frame_',
                 1,
                 null,
@@ -43,72 +38,43 @@ function DestinyPage() {
             )
         }
 
-        // The Heartbeat: Custom Animation Loop
-        const tick = () => {
-            if (!seqRef.current) return
-
-            const s = state.current
-
-            // 1. Friction / Return to Base Speed
-            // Linearly interpolate velocity back to baseSpeed
-            // The 0.05 factor controls how fast it returns to auto-play after scrolling
-            s.velocity += (s.baseSpeed - s.velocity) * 0.05
-
-            // 2. Update Position
-            s.frame += s.velocity
-
-            // 3. Handle Infinite Loop (Wrapping)
-            const total = frameCounts.divine
-            if (s.frame >= total) {
-                s.frame = s.frame % total
-            } else if (s.frame < 0) {
-                s.frame = total + (s.frame % total)
-            }
-
-            // 4. Render
-            // Update the sequence reference frame
-            seqRef.current.frame.index = Math.floor(s.frame)
-            seqRef.current.render() // Optimized internally
-        }
-
-        gsap.ticker.add(tick)
-
-        // Scroll Interaction Logic
-        const handleWheel = (e) => {
-            // e.deltaY > 0 is scrolling down (usually moving content up / forward in time)
-            // e.deltaY < 0 is scrolling up (backward in time)
-
-            // Adjust sensitivity
-            const sensitivity = 0.02 // SIGNIFICANTLY SLOWER for precise control
-
-            // Invert delta if needed based on desired "scroll down = forward" logic
-            // Usually Scroll Down (positive deltaY) -> Go Forward
-            // Scroll Up (negative deltaY) -> Go Backward
-            const delta = e.deltaY * sensitivity
-
-            // Inject velocity
-            state.current.velocity += delta
-
-            // Clamp max velocity to prevent crazy spinning
-            const maxVel = 2.0 // Cap max speed lower
-            if (state.current.velocity > maxVel) state.current.velocity = maxVel
-            if (state.current.velocity < -maxVel) state.current.velocity = -maxVel
-        }
-
-        window.addEventListener('wheel', handleWheel)
+        // Auto-play after images start loading
+        setTimeout(() => {
+            playOnce()
+        }, 100)
 
         return () => {
-            gsap.ticker.remove(tick)
-            window.removeEventListener('wheel', handleWheel)
+            gsap.killTweensOf(seqRef.current?.frame)
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill())
         }
     }, [])
+
+    const playOnce = () => {
+        if (!seqRef.current) return
+
+        // Animate from frame 0 to last frame - INFINITE LOOP
+        gsap.to(seqRef.current.frame, {
+            index: frameCounts.destiny - 1,
+            duration: 10, // Proportional to Karma's 13s for 399 frames
+            ease: 'none',
+            repeat: -1, // Loop infinitely
+            yoyo: false,
+            onUpdate: () => {
+                seqRef.current.render()
+            },
+            onRepeat: () => {
+                // Reset to frame 0 on each loop
+                seqRef.current.frame.index = 0
+            }
+        })
+    }
 
     const handleBack = () => {
         navigate('/')
     }
 
     return (
-        <div className="divine-page-scroll" style={{ overflow: 'hidden', height: '100vh' }}>
+        <div className="divine-page-scroll" ref={containerRef}>
             {/* Back Button */}
             <button className="back-button" onClick={handleBack}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -116,14 +82,66 @@ function DestinyPage() {
                 </svg>
             </button>
 
-            {/* Video Canvas */}
-            <canvas ref={canvasRef} className="divine-canvas" style={{ zIndex: 1 }} />
+            {/* Video Section */}
+            <section className="video-section">
+                <canvas ref={canvasRef} className="divine-canvas" style={{ zIndex: 1 }} />
 
-            {/* Header Overlay */}
-            <header className="divine-header">
-                <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DESTINY</h1>
-                <p>Written In The Stars</p>
-            </header>
+                {/* Header Overlay */}
+                <header className="divine-header">
+                    <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>DESTINY</h1>
+                    <p>Written In The Stars</p>
+                </header>
+
+                {/* Cloud Transition Effect */}
+                <div className="cloud-transition"></div>
+            </section>
+
+            {/* Content Sections */}
+            <section className="content-section ideation-section">
+                <div className="content-container">
+                    <div className="content-text">
+                        <span className="section-label">VISION</span>
+                        <h2>The path is not found, it is forged by the choices we make.</h2>
+                        <p>
+                            <strong>Destiny</strong> is not a predetermined conclusion, but a canvas
+                            waiting for your brushstroke. It embodies the courage to embrace the unknown
+                            and the wisdom to trust the journey.
+                        </p>
+                    </div>
+                    <div className="content-image">
+                        <div className="image-placeholder">
+                            {/* Placeholder or specific image */}
+                            <img src="/backgrounds/3.png" alt="Destiny Concept" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="content-section engineering-section">
+                <div className="content-container reverse">
+                    <div className="content-image">
+                        <div className="image-placeholder">
+                            {/* Placeholder or specific image */}
+                            <img src="/backgrounds/4.png" alt="Destiny Detail" />
+                        </div>
+                    </div>
+                    <div className="content-text">
+                        <span className="section-label">REFLECTION</span>
+                        <h2>A constellation of moments, aligning to form your truth.</h2>
+                        <p>
+                            Every thread woven with intention. <strong>Destiny</strong> reminds us that
+                            while we may not control the stars, we can steer the ship. It is an
+                            ode to those who dare to write their own story.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="cta-section">
+                <h2>Shape Your Future</h2>
+                <p>The stars align for those who act. Claim your path.</p>
+                <button className="cta-button">Explore Collection</button>
+            </section>
 
         </div>
     )

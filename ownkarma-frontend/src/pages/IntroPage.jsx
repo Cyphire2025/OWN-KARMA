@@ -5,11 +5,52 @@ import gsap from 'gsap'
 import '../styles/divine.css'
 
 const STAGES = [
-    { id: 0, folder: 'intro', frames: 1823, loop: false, audio: '/audio/stage0.mp3' },
-    { id: 1, folder: 'car', frames: 300, loop: false, audio: '/audio/stage1.mp3' },
-    { id: 2, folder: 'intro', frames: 1823, loop: false, audio: '/audio/stage2.mp3' },
-    { id: 3, folder: 'lambo', frames: 1056, loop: false, audio: '/audio/stage3.mp3' },
-    { id: 4, folder: 'anime', frames: 4604, loop: false, audio: '/audio/stage4.mp3' }
+    {
+        id: 0,
+        folder: 'intro',
+        frames: 1823,
+        loop: false,
+        audio: '/audio/stage0.mp3',
+        text1: "LIVING CONSCIOUSLY",
+        text2: "BUILDING OWN KARMA"
+    },
+    {
+        id: 1,
+        folder: 'car',
+        frames: 300,
+        loop: false,
+        audio: '/audio/stage1.mp3',
+        format: '.avif',
+        text1: "We do not stand above creation",
+        text2: "We live inside it"
+    },
+    {
+        id: 2,
+        folder: 'karmaeye',
+        frames: 399,
+        loop: false,
+        audio: '/audio/stage2.mp3',
+        text1: "Awareness is not given",
+        text2: "It is built"
+    },
+    {
+        id: 3,
+        folder: 'destiny',
+        frames: 302,
+        loop: false,
+        audio: '/audio/stage3.mp3',
+        text1: "Walls are built by fear",
+        text2: "Freedom begins with action"
+    },
+    {
+        id: 4,
+        folder: 'anime',
+        frames: 4604,
+        loop: false,
+        audio: '/audio/stage4.mp3',
+        text1: "Life is not linear",
+        text2: "It is lived in phases"
+    }
 ]
 
 function IntroPage() {
@@ -33,7 +74,8 @@ function IntroPage() {
     useEffect(() => {
         // Initialize Audio and attach to DOM
         const audio = document.createElement('audio')
-        audio.src = STAGES[0].audio
+        // audio.src = STAGES[0].audio
+        audio.src = '/audio/background1.mp3' // Reverted to single audio
         audio.loop = true
         audio.volume = 0.5
         audio.preload = 'auto'
@@ -101,14 +143,17 @@ function IntroPage() {
         }
 
         // --- Switch Audio Track ---
+        /* Commented out per-stage audio switching
         if (audioRef.current) {
             audioRef.current.src = currentStageData.audio
             // Ensure playback resumes (even if muted)
             audioRef.current.play().catch(e => console.log("Audio switch play failed", e))
         }
+        */
 
         // --- Speed Settings ---
-        if (stage === 0 || stage === 2) {
+        if (stage === 0) {
+            // Intro remains fast/smooth
             state.current.velocity = 0.75
             state.current.baseSpeed = 0.75
         } else if (stage === 4) {
@@ -116,9 +161,9 @@ function IntroPage() {
             state.current.velocity = 1
             state.current.baseSpeed = 1
         } else {
-            // Car (Stage 1) and Lambo (Stage 3)
-            state.current.velocity = 0.4
-            state.current.baseSpeed = 0.2
+            // Stages 1, 2, 3 (Car, Karma, Destiny) -> Original Speed (~0.5 for ~30fps)
+            state.current.velocity = 0.16
+            state.current.baseSpeed = 0.16
         }
 
         // UNIQUE KEY for Cache: folder + frames
@@ -133,7 +178,7 @@ function IntroPage() {
             'frame_',
             1,
             null,
-            '.avif'
+            currentStageData.format || '.avif'
         )
 
         // Force initial render of the new sequence
@@ -195,9 +240,9 @@ function IntroPage() {
                     progressRef.current.style.height = `${progress * 100}%`
                 }
 
-                if (stage === 0) {
-                    syncIntroText(s.frame)
-                }
+
+                // Sync Text for ALL stages
+                syncText(s.frame, config.frames)
             }
         }
 
@@ -304,15 +349,27 @@ function IntroPage() {
         transitionToStage(targetIndex, direction)
     }
 
-    const syncIntroText = (frame) => {
-        const t1 = document.getElementById('text-1')
+    const syncText = (frame, totalFrames) => {
+        const t1 = document.getElementById('stage-text-1')
+        const t2 = document.getElementById('stage-text-2')
+
+        // Calculate percentages to handle different video lengths generically
+        // Text 1: Appears ~20% -> Fades out ~45%
+        // Text 2: Appears ~55% -> Fades out ~80%
+
+        const start1 = totalFrames * 0.2
+        const end1 = totalFrames * 0.45
+
+        const start2 = totalFrames * 0.55
+        const end2 = totalFrames * 0.8
+
         if (t1) {
-            if (frame > 90 && frame < 540) t1.style.opacity = 1
+            if (frame > start1 && frame < end1) t1.style.opacity = 1
             else t1.style.opacity = 0
         }
-        const t2 = document.getElementById('text-2')
+
         if (t2) {
-            if (frame > 820 && frame < 1360) t2.style.opacity = 1
+            if (frame > start2 && frame < end2) t2.style.opacity = 1
             else t2.style.opacity = 0
         }
     }
@@ -379,16 +436,60 @@ function IntroPage() {
 
             {/* Overlays */}
             <>
-                {stage === 0 && (
-                    <>
-                        <div id="text-1" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
-                            <h2 className="text-3xl tracking-[0.5em] font-light mb-4">LIVING CONSCIOUSLY</h2>
-                        </div>
-                        <div id="text-2" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none transition-opacity duration-1000" style={{ opacity: 0 }}>
-                            <h2 className="text-3xl tracking-[1em] font-light">BUILDING OWN KARMA</h2>
-                        </div>
-                    </>
-                )}
+                {/* Dynamic Text for Current Stage */}
+                <div id="stage-text-1"
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        pointerEvents: 'none',
+                        transition: 'opacity 1s ease',
+                        opacity: 0,
+                        width: '100%',
+                        padding: '0 20px',
+                        color: 'white',
+                        zIndex: 40
+                    }}
+                >
+                    <h2 style={{
+                        fontSize: 'clamp(1.5rem, 4vw, 3.5rem)',
+                        fontWeight: '300',
+                        letterSpacing: '0.3em',
+                        textTransform: 'uppercase',
+                        textShadow: '0 0 30px rgba(0,0,0,0.8)'
+                    }}>
+                        {STAGES[stage].text1}
+                    </h2>
+                </div>
+
+                <div id="stage-text-2"
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        pointerEvents: 'none',
+                        transition: 'opacity 1s ease',
+                        opacity: 0,
+                        width: '100%',
+                        padding: '0 20px',
+                        color: 'white',
+                        zIndex: 40
+                    }}
+                >
+                    <h2 style={{
+                        fontSize: 'clamp(1.5rem, 4vw, 3.5rem)',
+                        fontWeight: '300',
+                        letterSpacing: '0.3em',
+                        textTransform: 'uppercase',
+                        textShadow: '0 0 30px rgba(0,0,0,0.8)'
+                    }}>
+                        {STAGES[stage].text2}
+                    </h2>
+                </div>
 
                 {/* Unified Button Logic for All Stages */}
                 <div style={{ ...wrapperStyle, opacity: showButton ? 1 : 0, pointerEvents: showButton ? 'auto' : 'none' }}>
