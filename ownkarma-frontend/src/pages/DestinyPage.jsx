@@ -8,7 +8,7 @@ import '../styles/divine.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    destiny: 302
+    destiny: 151 // 302/2
 }
 
 function DestinyPage() {
@@ -30,9 +30,9 @@ function DestinyPage() {
                 'destiny-302',
                 canvasRef.current,
                 'destiny', // Folder
-                frameCounts.destiny,
+                frameCounts.destiny * 2,
                 'frame_',
-                1,
+                2,
                 null,
                 '.avif'
             )

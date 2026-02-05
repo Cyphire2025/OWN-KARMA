@@ -8,7 +8,7 @@ import '../styles/karma.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    karma: 399
+    karma: 200 // 399/2
 }
 
 function KarmaPage() {
@@ -30,9 +30,9 @@ function KarmaPage() {
                 'karmaeye-399',
                 canvasRef.current,
                 'karmaeye', // Folder name
-                frameCounts.karma,
+                frameCounts.karma * 2, // Original count
                 'frame_',
-                1,
+                2, // Stride
                 null,
                 '.avif'
             )

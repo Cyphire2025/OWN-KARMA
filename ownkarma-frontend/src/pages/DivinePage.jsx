@@ -9,7 +9,7 @@ import '../styles/divine.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const frameCounts = {
-    divine: 192
+    divine: 96 // 192/2
 }
 
 function DivinePage() {
@@ -35,9 +35,9 @@ function DivinePage() {
                 'divine-192', // Unique Cache Key
                 canvasRef.current,
                 'divine',
-                frameCounts.divine,
+                frameCounts.divine * 2,
                 'frame_',
-                1,
+                2,
                 null,
                 '.avif'
             )

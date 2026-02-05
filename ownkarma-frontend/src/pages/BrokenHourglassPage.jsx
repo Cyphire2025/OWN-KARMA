@@ -5,7 +5,7 @@ import gsap from 'gsap'
 import '../styles/divine.css' // Reusing divine styles for full screen canvas
 
 const frameCounts = {
-    divine: 300 // Reusing Divine frames as requested
+    divine: 150 // 300/2
 }
 
 function BrokenHourglassPage() {
@@ -35,9 +35,9 @@ function BrokenHourglassPage() {
                 'car-300',
                 canvasRef.current,
                 'car',
-                frameCounts.divine,
+                frameCounts.divine * 2,
                 'frame_',
-                1,
+                2,
                 null,
                 '.avif'
             )

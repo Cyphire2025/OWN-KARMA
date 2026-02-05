@@ -8,7 +8,7 @@ const STAGES = [
     {
         id: 0,
         folder: 'intro',
-        frames: 1823,
+        frames: 912, // 1823/2 ceil
         loop: false,
         audio: '/audio/stage0.mp3',
         text1: "LIVING CONSCIOUSLY",
@@ -17,7 +17,7 @@ const STAGES = [
     {
         id: 1,
         folder: 'car',
-        frames: 300,
+        frames: 150, // 300/2
         loop: false,
         audio: '/audio/stage1.mp3',
         format: '.avif',
@@ -27,7 +27,7 @@ const STAGES = [
     {
         id: 2,
         folder: 'karmaeye',
-        frames: 399,
+        frames: 200, // 399/2 ceil
         loop: false,
         audio: '/audio/stage2.mp3',
         text1: "Awareness is not given",
@@ -36,7 +36,7 @@ const STAGES = [
     {
         id: 3,
         folder: 'destiny',
-        frames: 302,
+        frames: 151, // 302/2 ceil
         loop: false,
         audio: '/audio/stage3.mp3',
         text1: "Walls are built by fear",
@@ -45,7 +45,7 @@ const STAGES = [
     {
         id: 4,
         folder: 'anime',
-        frames: 4604,
+        frames: 2302, // 4604/2
         loop: false,
         audio: '/audio/stage4.mp3',
         text1: "Life is not linear",
@@ -170,13 +170,14 @@ function IntroPage() {
         const seqKey = `${currentStageData.folder}-${currentStageData.frames}`
 
         // USE CACHED FACTORY
+        // USE CACHED FACTORY
         seqRef.current = ImageSequence.getSequence(
             seqKey,
             canvasRef.current,
             currentStageData.folder,
-            currentStageData.frames,
+            currentStageData.frames * 2, // Tell ImageSequence original count
             'frame_',
-            1,
+            2, // Stride 2 (skip every other frame)
             null,
             currentStageData.format || '.avif'
         )
