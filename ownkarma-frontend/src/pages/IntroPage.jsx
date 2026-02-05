@@ -668,7 +668,7 @@ function IntroPage() {
                 width: '100%',
                 maxWidth: '450px', // Sidebar Width
                 height: '100vh',
-                background: '#090909',
+                background: '#141414', // Lighter luxury dark
                 zIndex: 99998,
                 transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)', // Slide Effect
                 transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)', // Smooth Easing
@@ -693,63 +693,54 @@ function IntroPage() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                         {[
-                            { name: 'DIVINE', img: '/backgrounds/1.png', link: '/divine' },
-                            { name: "KARMA'S EYE", img: '/backgrounds/2.png', link: '/karma-eye' },
-                            { name: 'DESTINY', img: '/backgrounds/3.png', link: '/destiny' },
-                            { name: 'BROKEN HOURGLASS', img: '/backgrounds/4.png', link: '/broken-hourglass' }
+                            { name: 'DIVINE', img: '/backgrounds/1.png', link: '/divine', glow: '255, 215, 0' }, // Goldish
+                            { name: "KARMA'S EYE", img: '/backgrounds/2.png', link: '/karma-eye', glow: '245, 222, 179' }, // Creamish/Skin (Wheat)
+                            { name: 'DESTINY', img: '/backgrounds/3.png', link: '/destiny', glow: '240, 248, 255' }, // Whitish (AliceBlue)
+                            { name: 'BROKEN HOURGLASS', img: '/backgrounds/4.png', link: '/broken-hourglass', glow: '139, 69, 19' } // Brownish
                         ].map((item, idx) => (
                             <div
                                 key={idx}
+                                className="menu-card"
+                                style={{ '--glow-color': item.glow }}
                                 onClick={() => {
                                     setMenuOpen(false)
                                     // Navigate Logic
                                     navigate(item.link)
                                 }}
-                                style={{
-                                    height: '140px',
-                                    width: '100%',
-                                    borderRadius: '12px',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                    cursor: 'pointer',
-                                    border: '1px solid rgba(255,255,255,0.1)'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                {/* BG Image */}
-                                <div style={{
-                                    position: 'absolute', inset: 0,
-                                    backgroundImage: `url(${item.img})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    filter: 'brightness(0.6)',
-                                    transition: 'transform 0.5s'
-                                }} />
+                                <div className="menu-card-inner">
+                                    {/* BG Image */}
+                                    <div
+                                        className="menu-card-bg"
+                                        style={{
+                                            backgroundImage: `url(${item.img})`,
+                                        }}
+                                    />
 
-                                {/* Content */}
-                                <div style={{
-                                    position: 'absolute', inset: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-end',
-                                    paddingRight: '3rem'
-                                }}>
-                                    <h3 style={{
-                                        color: 'white',
-                                        fontSize: '1.5rem',
-                                        letterSpacing: '0.05em',
-                                        fontWeight: '500',
+                                    {/* Content */}
+                                    <div style={{
+                                        position: 'absolute', inset: 0,
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '10px'
+                                        justifyContent: 'flex-end',
+                                        paddingRight: '3rem'
                                     }}>
-                                        {item.name}
-                                        {/* Chevron Icon */}
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="9 18 15 12 9 6"></polyline>
-                                        </svg>
-                                    </h3>
+                                        <h3 style={{
+                                            color: 'white',
+                                            fontSize: '1.5rem',
+                                            letterSpacing: '0.05em',
+                                            fontWeight: '500',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px'
+                                        }}>
+                                            {item.name}
+                                            {/* Chevron Icon */}
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </h3>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -781,6 +772,71 @@ function IntroPage() {
                 @keyframes bounce { 
                     0%, 100% { transform: translateY(0); } 
                     50% { transform: translateY(10px); } 
+                }
+
+                /* Premium Menu Card Styles */
+                .menu-card {
+                    height: 140px;
+                    width: 100%;
+                    border-radius: 12px;
+                    overflow: visible; /* Needed for outside shadow/glow */
+                    position: relative;
+                    cursor: pointer;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    background: #000;
+                    /* No elevation or glow in normal state */
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                }
+
+                .menu-card-inner {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    position: relative;
+                    z-index: 2;
+                }
+                
+                .menu-card::before {
+                    content: '';
+                    position: absolute;
+                    inset: -5px; /* Larger reach for glow */
+                    z-index: 1;
+                    border-radius: 16px;
+                    background: radial-gradient(circle at center, rgba(var(--glow-color),0.4), transparent 70%);
+                    opacity: 0; /* Hidden in normal state */
+                    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    filter: blur(12px);
+                }
+
+                .menu-card:hover {
+                    transform: translateY(-12px) scale(1.02); /* More aggressive elevation */
+                    border-color: rgba(var(--glow-color), 0.5);
+                    /* Dynamic Colored Glow + Deep Shadow */
+                    box-shadow: 
+                        0 30px 60px -15px rgba(0,0,0,0.8),
+                        0 0 30px -5px rgba(var(--glow-color), 0.4); 
+                }
+
+                .menu-card:hover::before {
+                    opacity: 1;
+                    transform: translateY(4px); /* Parallax effect for the glow */
+                }
+
+                .menu-card-bg {
+                    position: absolute;
+                    inset: 0;
+                    background-size: cover;
+                    background-position: center;
+                    filter: brightness(0.6) grayscale(20%);
+                    transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+                    transform: scale(1);
+                }
+
+                .menu-card:hover .menu-card-bg {
+                    filter: brightness(0.9) grayscale(0%);
+                    transform: scale(1.08); /* Slow cinematic zoom */
                 }
             `}</style>
         </div>
