@@ -5,8 +5,9 @@ WORKDIR /app
 # Install dependencies using Yarn
 # Adjust path to look inside ownkarma-backend folder
 COPY ownkarma-backend/package.json ownkarma-backend/yarn.lock ./
-# We use --frozen-lockfile to ensure reproducible builds
-RUN yarn install --frozen-lockfile
+
+# We simply run install. Removing --frozen-lockfile fixes cross-platform lockfile issues.
+RUN yarn install
 
 # Copy source code
 COPY ownkarma-backend/ .
