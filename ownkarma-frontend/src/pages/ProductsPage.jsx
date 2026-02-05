@@ -8,25 +8,29 @@ const products = [
         name: 'DIVINE',
         tagline: 'Beyond Human Understanding',
         color: '#646464ff',
-        image: '/backgrounds/1.png'
+        image: '/backgrounds/1.png',
+        glow: '255, 215, 0' // Gold
     },
     {
         name: 'KARMA\'S EYE',
         tagline: 'Witness To Every Action',
         color: '#646464ff',
-        image: '/backgrounds/2.png'
+        image: '/backgrounds/2.png',
+        glow: '245, 222, 179' // Cream
     },
     {
         name: 'DESTINY',
         tagline: 'Written In The Stars',
         color: '#646464ff',
-        image: '/backgrounds/3.png'
+        image: '/backgrounds/3.png',
+        glow: '255, 255, 255' // White
     },
     {
         name: 'BROKEN HOURGLASS',
         tagline: 'Time\'s Final Surrender',
         color: '#646464ff',
-        image: '/backgrounds/4.png'
+        image: '/backgrounds/4.png',
+        glow: '139, 69, 19' // Brown
     }
 ]
 
@@ -196,11 +200,15 @@ function ProductsPage() {
                         <div
                             key={index}
                             className="product-card-luxury"
-                            style={{ '--card-color': product.color }}
+                            style={{
+                                '--card-color': product.color,
+                                '--glow-rgb': product.glow
+                            }}
                             onClick={() => handleCardClick(product.name)}
                             onMouseEnter={(e) => handleCardHover(e, index, true)}
                             onMouseLeave={(e) => handleCardHover(e, index, false)}
                         >
+                            <div className="card-backlight"></div>
                             <div className="card-inner">
                                 {product.image && (
                                     <>

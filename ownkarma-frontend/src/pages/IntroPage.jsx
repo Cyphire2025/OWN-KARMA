@@ -688,7 +688,7 @@ function IntroPage() {
                         fontFamily: 'sans-serif',
                         marginLeft: '5px' // Align with cards
                     }}>
-                        ALL TIMEPIECES
+                        OUR PRODUCTS
                     </h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
