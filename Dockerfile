@@ -2,15 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies using Yarn
-# Adjust path to look inside ownkarma-backend folder
-COPY ownkarma-backend/package.json ownkarma-backend/yarn.lock ./
-
-# We simply run install. Removing --frozen-lockfile fixes cross-platform lockfile issues.
-RUN yarn install
-
-# Copy source code
+# Copy ALL backend source code first
+# This ensures we have .yarnrc.yml, .npmrc, and everything else needed for a correct install
 COPY ownkarma-backend/ .
+
+# Install dependencies using Yarn
+# We accept the loose lockfile to smooth over platform differences
+RUN yarn install
 
 # Build the application
 RUN yarn build
