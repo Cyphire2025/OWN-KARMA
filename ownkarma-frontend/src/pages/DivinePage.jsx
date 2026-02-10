@@ -1,9 +1,10 @@
+
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { medusa } from '../lib/medusa'
+import ProductsSection from '../components/ProductsSection'
 import '../styles/divine.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -18,9 +19,6 @@ function DivinePage() {
     const divineSeqRef = useRef(null)
     const containerRef = useRef(null)
     const [videoPlayed, setVideoPlayed] = useState(false)
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
 
     useEffect(() => {
         gsap.ticker.lagSmoothing(0)
@@ -48,58 +46,11 @@ function DivinePage() {
             playOnce()
         }, 100)
 
-        // Fetch products from Medusa
-        fetchProducts()
-
         return () => {
             gsap.killTweensOf(divineSeqRef.current?.frame)
             ScrollTrigger.getAll().forEach(trigger => trigger.kill())
         }
     }, [])
-
-    const fetchProducts = async () => {
-        try {
-            console.log('Fetching DIVINE collection...')
-
-            // First, get the DIVINE collection
-            const collectionsResponse = await medusa.collections.list()
-            console.log('All collections:', collectionsResponse.collections)
-
-            const divineCollection = collectionsResponse.collections.find(
-                col => col.title.toLowerCase().includes('divine')
-            )
-
-            if (!divineCollection) {
-                console.log('DIVINE collection not found')
-                setProducts([])
-                setLoading(false)
-                return
-            }
-
-            console.log('Found DIVINE collection:', divineCollection)
-
-            // Fetch products from DIVINE collection only
-            const response = await medusa.products.list({
-                collection_id: [divineCollection.id]
-            })
-
-            console.log('Products from DIVINE collection:', response)
-            console.log('Products array:', response.products)
-            console.log('Products count:', response.products?.length)
-
-            // Log each product
-            response.products?.forEach((product, index) => {
-                console.log(`Product ${index}:`, product)
-            })
-
-            setProducts(response.products || [])
-            setLoading(false)
-        } catch (error) {
-            console.error('Error fetching products:', error)
-            setError(error.message)
-            setLoading(false)
-        }
-    }
 
     const playOnce = () => {
         if (!divineSeqRef.current) return
@@ -122,10 +73,6 @@ function DivinePage() {
 
     const handleBack = () => {
         navigate('/')
-    }
-
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`)
     }
 
     return (
@@ -190,73 +137,12 @@ function DivinePage() {
                 </div>
             </section>
 
-            {/* Products Section - Connected to Backend */}
-            <section className="products-section">
-                <div className="products-container">
-                    <div className="products-header">
-                        <h2>Divine Collection</h2>
-                        <p>Curated pieces for conscious living</p>
-                    </div>
-
-                    {loading ? (
-                        <div className="products-loading">
-                            <p>Loading products...</p>
-                        </div>
-                    ) : error ? (
-                        <div className="products-loading">
-                            <p style={{ color: '#ff6b6b' }}>Error: {error}</p>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '1rem' }}>
-                                Check browser console for details
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="products-grid">
-                            {products && products.length > 0 ? (
-                                products.map((product) => {
-                                    const image = product.thumbnail || product.images?.[0]?.url
-                                    const price = product.variants?.[0]?.prices?.[0]
-
-                                    return (
-                                        <div
-                                            key={product.id}
-                                            className="product-card"
-                                            onClick={() => handleProductClick(product.id)}
-                                        >
-                                            <div className="product-image">
-                                                {image ? (
-                                                    <img src={image} alt={product.title} />
-                                                ) : (
-                                                    <div className="product-image-placeholder">
-                                                        <span>No Image</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="product-info">
-
-                                                {product.subtitle && (
-                                                    <p className="product-subtitle">{product.subtitle}</p>
-                                                )}
-                                                {price && (
-                                                    <p className="product-price">
-                                                        {new Intl.NumberFormat('en-US', {
-                                                            style: 'currency',
-                                                            currency: price.currency_code.toUpperCase()
-                                                        }).format(price.amount / 100)}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                })
-                            ) : (
-                                <div className="products-loading">
-                                    <p>No products found</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </section>
+            {/* Products Section - Automatically fetches products listed on 'divine' page */}
+            <ProductsSection
+                pageName="divine"
+                title="Divine Collection"
+                subtitle="Curated pieces for conscious living"
+            />
         </div>
     )
 }

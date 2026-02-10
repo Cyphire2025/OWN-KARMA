@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ProductsSection from '../components/ProductsSection'
 import '../styles/divine.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -137,11 +138,12 @@ function DestinyPage() {
                 </div>
             </section>
 
-            <section className="cta-section">
-                <h2>Shape Your Future</h2>
-                <p>The stars align for those who act. Claim your path.</p>
-                <button className="cta-button">Explore Collection</button>
-            </section>
+            {/* Products Section - Automatically fetches products listed on 'destiny' page */}
+            <ProductsSection
+                pageName="destiny"
+                title="Destiny Collection"
+                subtitle="Your future is waiting"
+            />
 
         </div>
     )

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { medusa } from '../lib/medusa'
+import { productsAPI } from '../lib/api'
 import '../styles/product-detail.css'
 
 function ProductDetailPage() {
@@ -8,7 +8,7 @@ function ProductDetailPage() {
     const navigate = useNavigate()
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [selectedVariant, setSelectedVariant] = useState(null)
+    const [selectedSize, setSelectedSize] = useState('')
     const [selectedImage, setSelectedImage] = useState(0)
     const [quantity, setQuantity] = useState(1)
 
@@ -18,9 +18,12 @@ function ProductDetailPage() {
 
     const fetchProduct = async () => {
         try {
-            const { product } = await medusa.products.retrieve(id)
-            setProduct(product)
-            setSelectedVariant(product.variants?.[0])
+            const data = await productsAPI.getById(id)
+            setProduct(data)
+            // Auto-select first size if available
+            if (data.sizes && data.sizes.length > 0) {
+                setSelectedSize(data.sizes[0])
+            }
             setLoading(false)
         } catch (error) {
             console.error('Error fetching product:', error)
@@ -29,8 +32,13 @@ function ProductDetailPage() {
     }
 
     const handleAddToCart = () => {
+        if (!product) return;
+        if (product.sizes?.length > 0 && !selectedSize) {
+            alert('Please select a size');
+            return;
+        }
         // TODO: Implement cart functionality
-        alert(`Added ${quantity} x ${product.title} to cart!`)
+        alert(`Added ${quantity} x ${product.title} (${selectedSize}) to cart!`)
     }
 
     if (loading) {
@@ -51,7 +59,8 @@ function ProductDetailPage() {
     }
 
     const images = product.images || []
-    const currentImage = images[selectedImage]?.url || product.thumbnail
+    // Fallback to thumbnail if no images array, or placeholder
+    const currentImage = images[selectedImage]?.url || product.thumbnail || ''
 
     return (
         <div className="product-detail-page">
@@ -94,38 +103,36 @@ function ProductDetailPage() {
                 {/* Right Side - Product Info */}
                 <div className="product-info-section">
                     <h1 className="product-title">{product.title}</h1>
+                    {product.tagline && <p className="product-tagline">{product.tagline}</p>}
 
-                    {selectedVariant?.prices?.[0] && (
-                        <p className="product-price">
-                            {new Intl.NumberFormat('en-US', {
-                                style: 'currency',
-                                currency: selectedVariant.prices[0].currency_code.toUpperCase()
-                            }).format(selectedVariant.prices[0].amount / 100)}
-                        </p>
-                    )}
+                    <div className="product-price-container">
+                        <span className="product-price">
+                            ₹{product.price.toLocaleString('en-IN')}
+                        </span>
+                        {product.compareAtPrice && (
+                            <span className="product-compare-price">
+                                ₹{product.compareAtPrice.toLocaleString('en-IN')}
+                            </span>
+                        )}
+                    </div>
 
-                    {/* Variant Options */}
-                    {product.options?.map((option) => (
-                        <div key={option.id} className="product-option">
-                            <label>{option.title}:</label>
+                    {/* Size Selector */}
+                    {product.sizes && product.sizes.length > 0 && (
+                        <div className="product-option">
+                            <label>Size:</label>
                             <div className="option-values">
-                                {option.values?.map((value) => (
+                                {product.sizes.map((size) => (
                                     <button
-                                        key={value.id}
-                                        className={`option-btn ${selectedVariant?.options?.find(o => o.value === value.value) ? 'active' : ''}`}
-                                        onClick={() => {
-                                            const variant = product.variants.find(v =>
-                                                v.options?.some(o => o.value === value.value)
-                                            )
-                                            if (variant) setSelectedVariant(variant)
-                                        }}
+                                        key={size}
+                                        className={`option-btn ${selectedSize === size ? 'active' : ''}`}
+                                        onClick={() => setSelectedSize(size)}
                                     >
-                                        {value.value}
+                                        {size}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                    ))}
+                    )}
 
                     {/* Quantity Selector */}
                     <div className="quantity-selector">
@@ -144,33 +151,22 @@ function ProductDetailPage() {
 
                     {/* Product Details Accordion */}
                     <div className="product-accordion">
-                        <details className="accordion-item">
+                        <details className="accordion-item" open>
                             <summary>PRODUCT DETAILS</summary>
                             <div className="accordion-content">
                                 <p>{product.description || 'No description available.'}</p>
                                 {product.material && <p><strong>Material:</strong> {product.material}</p>}
-                                {product.weight && <p><strong>Weight:</strong> {product.weight}g</p>}
                             </div>
                         </details>
 
                         <details className="accordion-item">
                             <summary>SHIPPING & RETURNS</summary>
                             <div className="accordion-content">
-                                <p>Free shipping on orders over $100.</p>
-                                <p>30-day return policy.</p>
-                                <p>Estimated delivery: 5-7 business days.</p>
+                                <p>Free shipping on orders over ₹2000.</p>
+                                <p>7-day return policy.</p>
+                                <p>Estimated delivery: 3-5 business days.</p>
                             </div>
                         </details>
-
-                        {product.metadata?.vendor && (
-                            <details className="accordion-item">
-                                <summary>VENDOR INFORMATION</summary>
-                                <div className="accordion-content">
-                                    <p><strong>Sold by:</strong> {product.metadata.vendor}</p>
-                                    <p>Rating: ⭐⭐⭐⭐⭐</p>
-                                </div>
-                            </details>
-                        )}
                     </div>
                 </div>
             </div>

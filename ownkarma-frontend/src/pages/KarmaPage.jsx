@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ProductsSection from '../components/ProductsSection'
 import '../styles/karma.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -137,11 +138,12 @@ function KarmaPage() {
                 </div>
             </section>
 
-            <section className="cta-section">
-                <h2>Awaken Your Awareness</h2>
-                <p>See the world as it truly is. Embrace the cycle.</p>
-                <button className="cta-button">Explore Collection</button>
-            </section>
+            {/* Products Section - Automatically fetches products listed on 'karma-eye' page */}
+            <ProductsSection
+                pageName="karma-eye"
+                title="Karma's Eye Collection"
+                subtitle="Witness the reflection of your choices"
+            />
         </div>
     )
 }

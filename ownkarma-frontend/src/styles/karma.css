@@ -2,8 +2,8 @@
 
 .karma-page-scroll {
     width: 100%;
-    background: #000000;
-    color: #ffffff;
+    background: #000;
+    color: white;
     overflow-x: hidden;
 }
 
@@ -35,7 +35,7 @@
 }
 
 .back-button:hover {
-    color: rgba(255, 255, 255, 1);
+    color: white;
     transform: translateX(-5px);
 }
 
@@ -55,7 +55,7 @@
     font-weight: 300;
     letter-spacing: 0.5em;
     margin: 0 0 0.3rem 0;
-    color: #ffffff;
+    color: white;
     transition: opacity 0.3s ease;
 }
 
@@ -143,15 +143,15 @@
     align-items: center;
     justify-content: center;
     padding: 6rem 2rem;
-    background: #000000;
+    background: #000;
 }
 
 .ideation-section {
-    background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+    background: radial-gradient(ellipse at center, #0d0d0d 0%, #000000 100%);
 }
 
 .engineering-section {
-    background: linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
+    background: radial-gradient(ellipse at center, #0d0d0d 0%, #000000 100%);
 }
 
 .content-container {
@@ -215,9 +215,9 @@
 .image-placeholder {
     width: 100%;
     aspect-ratio: 4/3;
-    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    background: rgba(0, 0, 0, 0.9);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
 }
@@ -231,7 +231,7 @@
     height: 100%;
     background: linear-gradient(90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0.1) 50%,
             transparent 100%);
     animation: shimmer 3s infinite;
     pointer-events: none;
@@ -268,7 +268,7 @@
     align-items: center;
     justify-content: center;
     padding: 6rem 2rem;
-    background: #000000;
+    background: #000;
     text-align: center;
 }
 

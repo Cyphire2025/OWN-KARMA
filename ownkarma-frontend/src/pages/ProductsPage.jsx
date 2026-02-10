@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
+import ProductsSection from '../components/ProductsSection'
 import '../styles/products.css'
 
 const products = [
@@ -231,8 +232,17 @@ function ProductsPage() {
                 </div>
             </div>
 
-            {/* Footer - Bottom Fixed */}
-            <footer className="luxury-footer-fixed">
+            {/* Featured / All Products Section */}
+            <div style={{ position: 'relative', zIndex: 10, marginTop: '100vh', background: '#000' }}>
+                <ProductsSection
+                    pageName="products"
+                    title="Latest Arrivals"
+                    subtitle="Discover our newest creations"
+                />
+            </div>
+
+            {/* Footer - Normal Flow */}
+            <footer className="luxury-footer" style={{ position: 'relative', padding: '2rem', textAlign: 'center', zIndex: 10, background: '#000', color: '#666' }}>
                 <p>Crafted with Consciousness &middot; Building Own Karma</p>
             </footer>
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
 import gsap from 'gsap'
-import { medusa } from '../lib/medusa'
+import ProductsSection from '../components/ProductsSection'
 import '../styles/divine.css'
 
 const frameCounts = {
@@ -14,9 +14,6 @@ function BrokenHourglassPage() {
     const canvasRef = useRef(null)
     const seqRef = useRef(null)
     const containerRef = useRef(null)
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
 
     // Animation State
     const state = useRef({
@@ -70,50 +67,13 @@ function BrokenHourglassPage() {
 
         gsap.ticker.add(tick)
 
-        // Fetch products from Medusa
-        fetchProducts()
-
         return () => {
             gsap.ticker.remove(tick)
         }
     }, [])
 
-    const fetchProducts = async () => {
-        try {
-            console.log('Fetching BROKEN HOURGLASS collection...')
-            const collectionsResponse = await medusa.collections.list()
-
-            // Look for "Broken Hourglass" collection
-            const brokenCollection = collectionsResponse.collections.find(
-                col => col.title.toLowerCase().includes('broken')
-            )
-
-            if (!brokenCollection) {
-                console.log('Broken Hourglass collection not found')
-                setProducts([])
-                setLoading(false)
-                return
-            }
-
-            const response = await medusa.products.list({
-                collection_id: [brokenCollection.id]
-            })
-
-            setProducts(response.products || [])
-            setLoading(false)
-        } catch (error) {
-            console.error('Error fetching products:', error)
-            setError(error.message)
-            setLoading(false)
-        }
-    }
-
     const handleBack = () => {
         navigate('/')
-    }
-
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`)
     }
 
     return (
@@ -178,72 +138,12 @@ function BrokenHourglassPage() {
                 </div>
             </section>
 
-            {/* Products Section - Connected to Backend */}
-            <section className="products-section">
-                <div className="products-container">
-                    <div className="products-header">
-                        <h2>Broken Hourglass Collection</h2>
-                        <p>Limited editions for the bold</p>
-                    </div>
-
-                    {loading ? (
-                        <div className="products-loading">
-                            <p>Loading products...</p>
-                        </div>
-                    ) : error ? (
-                        <div className="products-loading">
-                            <p style={{ color: '#ff6b6b' }}>Error: {error}</p>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '1rem' }}>
-                                Check browser console for details
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="products-grid">
-                            {products && products.length > 0 ? (
-                                products.map((product) => {
-                                    const image = product.thumbnail || product.images?.[0]?.url
-                                    const price = product.variants?.[0]?.prices?.[0]
-
-                                    return (
-                                        <div
-                                            key={product.id}
-                                            className="product-card"
-                                            onClick={() => handleProductClick(product.id)}
-                                        >
-                                            <div className="product-image">
-                                                {image ? (
-                                                    <img src={image} alt={product.title} />
-                                                ) : (
-                                                    <div className="product-image-placeholder">
-                                                        <span>No Image</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="product-info">
-                                                {product.subtitle && (
-                                                    <p className="product-subtitle">{product.subtitle}</p>
-                                                )}
-                                                {price && (
-                                                    <p className="product-price">
-                                                        {new Intl.NumberFormat('en-US', {
-                                                            style: 'currency',
-                                                            currency: price.currency_code.toUpperCase()
-                                                        }).format(price.amount / 100)}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                })
-                            ) : (
-                                <div className="products-loading">
-                                    <p>No products found</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </section>
+            {/* Products Section - Automatically fetches products listed on 'broken-hourglass' page */}
+            <ProductsSection
+                pageName="broken-hourglass"
+                title="Broken Hourglass Collection"
+                subtitle="Limited editions for the bold"
+            />
         </div>
     )
 }
