@@ -9,6 +9,13 @@
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 
+  --color-surface: hsl(var(--secondary) / 0.3);
+  --color-elevated: hsl(var(--card));
+  --color-text: hsl(var(--foreground));
+  --color-dim: hsl(var(--muted-foreground));
+  --color-danger: hsl(var(--destructive));
+  --color-accent-light: color-mix(in srgb, hsl(var(--accent)), white 20%);
+
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
@@ -185,22 +192,6 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .text-text {
-    @apply text-foreground;
-  }
-
-  .text-dim {
-    @apply text-muted-foreground;
-  }
-
-  .bg-elevated {
-    @apply bg-card;
-  }
-
-  .bg-surface {
-    @apply bg-secondary/30;
-  }
-
   .text-success {
     @apply text-green-600 dark:text-green-400;
   }
