@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import {
     Plus,
@@ -9,7 +9,8 @@ import {
     Eye,
     EyeOff,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    X
 } from 'lucide-react';
 
 // Mapping for readable page names
@@ -35,16 +36,28 @@ interface Product {
 
 const ProductsPage = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const categoryFilter = searchParams.get('category');
 
     useEffect(() => {
         fetchProducts();
     }, []);
 
+    useEffect(() => {
+        if (categoryFilter) {
+            setFilteredProducts(products.filter(p => p.category?._id === categoryFilter));
+        } else {
+            setFilteredProducts(products);
+        }
+    }, [categoryFilter, products]);
+
     const fetchProducts = async () => {
         try {
             const res = await api.get('/products');
             setProducts(res.data);
+            setFilteredProducts(res.data);
         } catch (err) {
             console.error('API not available');
         } finally {
@@ -93,9 +106,19 @@ const ProductsPage = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-border pb-6">
                 <div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Inventory</h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                        {products.length} {products.length === 1 ? 'item' : 'items'} in your catalog
-                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                        <p className="text-gray-500 text-sm">
+                            {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} in your catalog
+                        </p>
+                        {categoryFilter && filteredProducts[0]?.category && (
+                            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
+                                Page: {filteredProducts[0].category.name}
+                                <button onClick={() => setSearchParams({})} className="hover:text-blue-900">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <Link
                     to="/products/new"
@@ -107,23 +130,29 @@ const ProductsPage = () => {
             </div>
 
             {/* ── Empty State ── */}
-            {products.length === 0 && (
+            {filteredProducts.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/50 text-center">
                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-gray-100">
                         <Package size={32} className="text-gray-400" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
                     <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto">
-                        Your catalog is currently empty. Add your first item to get started.
+                        {categoryFilter ? 'No products are currently listed on this page.' : 'Your catalog is currently empty. Add your first item to get started.'}
                     </p>
-                    <Link to="/products/new" className="text-blue-600 font-bold hover:underline">
-                        Create Product &rarr;
-                    </Link>
+                    {categoryFilter ? (
+                        <button onClick={() => setSearchParams({})} className="text-blue-600 font-bold hover:underline">
+                            Clear Filter &rarr;
+                        </button>
+                    ) : (
+                        <Link to="/products/new" className="text-blue-600 font-bold hover:underline">
+                            Create Product &rarr;
+                        </Link>
+                    )}
                 </div>
             )}
 
             {/* ── Products Table ── */}
-            {products.length > 0 && (
+            {filteredProducts.length > 0 && (
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -139,7 +168,7 @@ const ProductsPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {products.map((product) => (
+                                {filteredProducts.map((product) => (
                                     <tr key={product._id} className="hover:bg-gray-50/80 transition-colors group">
 
                                         {/* Product Info */}
@@ -217,8 +246,8 @@ const ProductsPage = () => {
                                             <button
                                                 onClick={() => toggleActive(product)}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${product.isActive
-                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                                        : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                                                    ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                    : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
                                                     }`}
                                             >
                                                 {product.isActive ? <CheckCircle2 size={12} /> : <EyeOff size={12} />}

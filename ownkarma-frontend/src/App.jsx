@@ -8,6 +8,7 @@ import DivinePage from './pages/DivinePage.jsx'
 import KarmaPage from './pages/KarmaPage.jsx'
 import DestinyPage from './pages/DestinyPage.jsx'
 import BrokenHourglassPage from './pages/BrokenHourglassPage.jsx'
+import CollectionPage from './pages/CollectionPage.jsx'
 
 function App() {
     return (
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/karma-eye" element={<KarmaPage />} />
                 <Route path="/destiny" element={<DestinyPage />} />
                 <Route path="/broken-hourglass" element={<BrokenHourglassPage />} />
+                <Route path="/collection/:slug" element={<CollectionPage />} />
             </Routes>
         </BrowserRouter>
     )

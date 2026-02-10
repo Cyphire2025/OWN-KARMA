@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ImageSequence } from '../utils/ImageSequence'
+import { categoriesAPI } from '../lib/api'
 import gsap from 'gsap'
 import '../styles/divine.css'
 
@@ -70,6 +71,54 @@ function IntroPage() {
     // Audio State
     const [isMuted, setIsMuted] = useState(true) // Start muted by default
     const audioRef = useRef(null)
+
+    // Dynamic Sidebar State
+    const [dynamicPages, setDynamicPages] = useState([])
+    const [isLoadingPages, setIsLoadingPages] = useState(true)
+
+    useEffect(() => {
+        const fetchPages = async () => {
+            try {
+                const data = await categoriesAPI.getAll()
+                setDynamicPages(data)
+            } catch (err) {
+                console.error("Failed to fetch sidebar pages", err)
+            } finally {
+                setIsLoadingPages(false)
+            }
+        }
+        fetchPages()
+    }, [])
+
+    const getPageLink = (name) => {
+        const n = name.toLowerCase().trim()
+        if (n.includes('divine')) return '/divine'
+        if (n.includes('karma')) return '/karma-eye'
+        if (n.includes('destiny')) return '/destiny'
+        if (n.includes('hourglass')) return '/broken-hourglass'
+        return `/collection/${n.replace(/\s+/g, '-')}`
+    }
+
+    const hexToRgb = (hex) => {
+        if (!hex) return '255, 255, 255';
+
+        let r, g, b;
+        let h = hex.replace('#', '');
+
+        if (h.length === 3) {
+            r = parseInt(h[0] + h[0], 16);
+            g = parseInt(h[1] + h[1], 16);
+            b = parseInt(h[2] + h[2], 16);
+        } else if (h.length === 6) {
+            r = parseInt(h.substring(0, 2), 16);
+            g = parseInt(h.substring(2, 4), 16);
+            b = parseInt(h.substring(4, 6), 16);
+        } else {
+            return '255, 255, 255';
+        }
+
+        return `${r}, ${g}, ${b}`;
+    }
 
     useEffect(() => {
         // Initialize Audio and attach to DOM
@@ -642,9 +691,8 @@ function IntroPage() {
                 <div style={{ width: '100%', height: '1.5px', background: 'white', transition: 'all 0.3s' }} />
             </div>
 
-            {/* --- BACKDROP BLUR OVERLAY --- */}
+            {/* --- SIDEBAR MENU DRAWER --- */}
             <div
-                onClick={() => setMenuOpen(false)}
                 style={{
                     position: 'fixed',
                     top: 0,
@@ -658,20 +706,20 @@ function IntroPage() {
                     pointerEvents: menuOpen ? 'auto' : 'none',
                     transition: 'opacity 0.6s ease'
                 }}
+                onClick={() => setMenuOpen(false)}
             />
 
-            {/* --- SIDEBAR MENU DRAWER --- */}
             <div style={{
                 position: 'fixed',
                 top: 0,
                 left: 0,
                 width: '100%',
-                maxWidth: '450px', // Sidebar Width
+                maxWidth: '450px',
                 height: '100vh',
-                background: '#141414', // Lighter luxury dark
+                background: '#141414',
                 zIndex: 99998,
-                transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)', // Slide Effect
-                transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)', // Smooth Easing
+                transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)',
+                transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                 boxShadow: '10px 0 30px rgba(0,0,0,0.5)',
                 borderRight: '1px solid rgba(255,255,255,0.05)',
                 display: 'flex',
@@ -686,38 +734,34 @@ function IntroPage() {
                         letterSpacing: '0.15em',
                         marginBottom: '2rem',
                         fontFamily: 'sans-serif',
-                        marginLeft: '5px' // Align with cards
+                        marginLeft: '5px'
                     }}>
-                        OUR PRODUCTS
+                        {isLoadingPages ? 'LOADING ARCHIVES...' : 'OUR CHAPTERS'}
                     </h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                        {[
-                            { name: 'DIVINE', img: '/backgrounds/1.png', link: '/divine', glow: '255, 215, 0' }, // Goldish
-                            { name: "KARMA'S EYE", img: '/backgrounds/2.png', link: '/karma-eye', glow: '245, 222, 179' }, // Creamish/Skin (Wheat)
-                            { name: 'DESTINY', img: '/backgrounds/3.png', link: '/destiny', glow: '240, 248, 255' }, // Whitish (AliceBlue)
-                            { name: 'BROKEN HOURGLASS', img: '/backgrounds/4.png', link: '/broken-hourglass', glow: '139, 69, 19' } // Brownish
-                        ].map((item, idx) => (
+                        {dynamicPages.map((item, idx) => (
                             <div
-                                key={idx}
+                                key={item._id || idx}
                                 className="menu-card"
-                                style={{ '--glow-color': item.glow }}
+                                style={{
+                                    '--glow-color': hexToRgb(item.color),
+                                    '--theme-color': item.color || 'rgba(255,255,255,0.1)'
+                                }}
                                 onClick={() => {
                                     setMenuOpen(false)
-                                    // Navigate Logic
-                                    navigate(item.link)
+                                    navigate(getPageLink(item.name))
                                 }}
                             >
                                 <div className="menu-card-inner">
-                                    {/* BG Image */}
                                     <div
                                         className="menu-card-bg"
                                         style={{
-                                            backgroundImage: `url(${item.img})`,
+                                            backgroundImage: `url(${item.image || `/backgrounds/${(idx % 4) + 1}.png`})`,
+                                            opacity: 0.6
                                         }}
                                     />
 
-                                    {/* Content */}
                                     <div style={{
                                         position: 'absolute', inset: 0,
                                         display: 'flex',
@@ -734,8 +778,7 @@ function IntroPage() {
                                             alignItems: 'center',
                                             gap: '10px'
                                         }}>
-                                            {item.name}
-                                            {/* Chevron Icon */}
+                                            {(item.name || '').toUpperCase()}
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="9 18 15 12 9 6"></polyline>
                                             </svg>
@@ -744,6 +787,12 @@ function IntroPage() {
                                 </div>
                             </div>
                         ))}
+
+                        {dynamicPages.length === 0 && !isLoadingPages && (
+                            <p style={{ color: 'white', opacity: 0.5, textAlign: 'center', padding: '2rem' }}>
+                                No archives published yet.
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -782,9 +831,9 @@ function IntroPage() {
                     overflow: visible; /* Needed for outside shadow/glow */
                     position: relative;
                     cursor: pointer;
-                    border: 1px solid rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.08);
                     transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-                    background: #000;
+                    background: #0a0a0a;
                     /* No elevation or glow in normal state */
                     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
                 }
@@ -812,7 +861,7 @@ function IntroPage() {
 
                 .menu-card:hover {
                     transform: translateY(-12px) scale(1.02); /* More aggressive elevation */
-                    border-color: rgba(var(--glow-color), 0.5);
+                    border-color: var(--theme-color);
                     /* Dynamic Colored Glow + Deep Shadow */
                     box-shadow: 
                         0 30px 60px -15px rgba(0,0,0,0.8),

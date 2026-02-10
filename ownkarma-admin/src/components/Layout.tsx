@@ -13,7 +13,7 @@ import {
 
 const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Categories', path: '/categories', icon: Layers },
+    { name: 'Pages', path: '/pages', icon: Layers },
     { name: 'Products', path: '/products', icon: Package },
     { name: 'Orders', path: '/orders', icon: ShoppingCart },
     { name: 'Settings', path: '/settings', icon: Settings },
@@ -47,11 +47,16 @@ const Layout = () => {
                     <Menu size={26} strokeWidth={1.8} />
                 </button>
 
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 mt-2">
-                    <img src="/Website-logo-black.png" alt="OWN KARMA" className="h-10 w-auto object-contain" />
-                </div>
-
                 <div className="w-10" />
+            </div>
+
+            {/* ── FIXED TOP LOGO ── */}
+            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
+                <img
+                    src="/Website-logo-black.png"
+                    alt="OWN KARMA"
+                    className="h-10 w-auto object-contain"
+                />
             </div>
 
             {/* ── WORKSPACE ── */}

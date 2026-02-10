@@ -9,6 +9,14 @@ const categorySchema = new mongoose.Schema({
     },
     description: String,
     image: String, // URL to category image
+    color: {
+        type: String,
+        default: '#000000'
+    },
+    order: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -5,7 +5,7 @@ const Category = require('../models/Category');
 // Get all categories
 router.get('/', async (req, res) => {
     try {
-        const categories = await Category.find();
+        const categories = await Category.find().sort({ order: 1, createdAt: 1 });
         res.json(categories);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -18,6 +18,20 @@ router.post('/', async (req, res) => {
     try {
         const newCategory = await category.save();
         res.status(201).json(newCategory);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// Update category
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedCategory = await Category.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        res.json(updatedCategory);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }

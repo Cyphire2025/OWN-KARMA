@@ -11,7 +11,7 @@ import '../styles/products-section.css';
  * @param {string} title - Section title (e.g., "Divine Collection")
  * @param {string} subtitle - Section subtitle (e.g., "Curated pieces for conscious living")
  */
-const ProductsSection = ({ pageName, title, subtitle }) => {
+const ProductsSection = ({ pageName, categoryId, title, subtitle }) => {
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,17 +19,18 @@ const ProductsSection = ({ pageName, title, subtitle }) => {
 
     useEffect(() => {
         fetchProducts();
-    }, [pageName]);
+    }, [pageName, categoryId]);
 
     const fetchProducts = async () => {
         try {
-            console.log(`Fetching products for '${pageName}' page...`);
+            console.log(`Fetching products...`);
 
-            // Fetch products that should be listed on this specific page
-            const data = await productsAPI.getByPage(pageName, true);
+            // Fetch products using either category ID (if dynamic page) or page internal name (legacy)
+            const params = { active: true };
+            if (categoryId) params.category = categoryId;
+            else if (pageName) params.page = pageName;
 
-            console.log(`Products for '${pageName}' page:`, data);
-            console.log('Products count:', data?.length);
+            const data = await productsAPI.getAll(params);
 
             setProducts(data || []);
             setLoading(false);

@@ -2,15 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 
-// Get all products (with optional page filter)
+// Get all products (with optional page or category filter)
 router.get('/', async (req, res) => {
     try {
-        const { page, active } = req.query;
+        const { page, category, active } = req.query;
         let query = {};
 
-        // Filter by page if specified
+        // Filter by frontend page identifier (listOnPages array)
         if (page) {
             query.listOnPages = page;
+        }
+
+        // Filter by Category model reference
+        if (category) {
+            query.category = category;
         }
 
         // Filter by active status if specified
